@@ -1,0 +1,25 @@
+/*
+** EPITECH PROJECT, 2026
+** my_teams
+** File description:
+** Server
+*/
+
+#include "Server.hpp"
+
+bool myTeams::Server::displayHelp(int argc, char *argv[]) const
+{
+    if (argc != 2) {
+        std::cout << "USAGE: ./myteams_server port" << std::endl;
+        return true;
+    }
+    for (unsigned int i = 0; argv[i] != NULL; i++) {
+        std::string arg = argv[i];
+        if (arg == "-h" || arg == "--help") {
+            std::cout << "USAGE: ./myteams_server port" << std::endl;
+            std::cout << "port is the port number on which the server socket listens." << std::endl;
+            return true;
+        }
+    }
+    return false;
+}
