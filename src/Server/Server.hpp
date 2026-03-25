@@ -15,7 +15,7 @@ namespace myTeams
     class Server
     {
         private:
-            u_int16_t port;
+            u_int16_t port = 0;
         public:
             Server() = default;
             ~Server() = default;
