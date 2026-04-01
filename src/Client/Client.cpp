@@ -66,7 +66,6 @@ void myTeams::Client::initClient(const std::string &ip, u_int16_t port)
 void myTeams::Client::run()
 {
     _isRunning = true;
-
     std::cout << "Client is running. Type 'exit' to quit." << std::endl;
 
     while (_isRunning) {
