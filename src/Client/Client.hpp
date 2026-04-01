@@ -9,17 +9,29 @@
 
     #include <iostream>
     #include <cstdlib>
+    #include <unistd.h>
+    #include <sys/socket.h>
+    #include <netinet/in.h>
+    #include <arpa/inet.h>
 
 namespace myTeams
 {
     class Client
     {
         private:
-            u_int16_t port = 0;
+            std::string _ip;
+            u_int16_t _port = 0;
+            int _serverSocket = -1;
+            bool _isRunning = false;
+
+            bool connectToServer();
+    
         public:
             Client() = default;
-            ~Client() = default;
+            ~Client();
 
             bool displayHelp(int argc, char *argv[]) const;
+            void initClient(const std::string &ip, u_int16_t port);
+            void run();
     };
 }

@@ -13,5 +13,11 @@ int main(int argc, char *argv[])
 
     if (client.displayHelp(argc, argv))
         return EXIT_SUCCESS;
+
+    std::string ip = argv[1];
+    u_int16_t port = static_cast<u_int16_t>(std::stoi(argv[2]));
+
+    client.initClient(ip, port);
+    client.run();
     return EXIT_SUCCESS;
 }
