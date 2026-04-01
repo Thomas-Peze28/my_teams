@@ -10,6 +10,7 @@
     #include <iostream>
     #include <cstdlib>
     #include <unistd.h>
+    #include <vector>
     #include <sys/socket.h>
     #include <netinet/in.h>
     #include <arpa/inet.h>
