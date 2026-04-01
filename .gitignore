@@ -2,3 +2,5 @@
 *.a
 *.out
 myteams_server
+myteams_client
+*.pdf
