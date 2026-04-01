@@ -9,11 +9,13 @@
 
     #include <iostream>
     #include <cstdlib>
-    #include <unistd.h>
     #include <vector>
+
+    #include <unistd.h>
     #include <sys/socket.h>
     #include <netinet/in.h>
     #include <arpa/inet.h>
+    #include <poll.h>
 
 namespace myTeams
 {
@@ -26,6 +28,8 @@ namespace myTeams
             bool _isRunning = false;
 
             bool connectToServer();
+            bool handleServerInput();
+            bool handleUserInput();
     
         public:
             Client() = default;

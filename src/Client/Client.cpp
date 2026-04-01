@@ -64,26 +64,71 @@ void myTeams::Client::initClient(const std::string &ip, u_int16_t port)
     std::cout << "Connected to server at " << _ip << ":" << _port << std::endl;
 }
 
+bool myTeams::Client::handleUserInput()
+{
+    std::string input;
+    std::getline(std::cin, input);
+
+    if (input == "exit") {
+        _isRunning = false;
+        std::cout << "[INFO] You've been disconnected." << std::endl;
+        return true;
+    }
+
+    std::string message = "[CLIENT] " + input + "\n";
+    send(_serverSocket, message.c_str(), message.size(), 0);
+    return true;
+}
+
+bool myTeams::Client::handleServerInput()
+{
+    std::string buffer(1024, '\0');
+    ssize_t bytesRead = recv(_serverSocket, &buffer[0], buffer.size(), 0);
+
+    if (bytesRead > 0) {
+        buffer.resize(bytesRead);
+        std::cout << "[SERVER] " << buffer;
+        return true;
+    } else if (bytesRead == 0) {
+        std::cout << "[INFO] Server closed the connection." << std::endl;
+        _isRunning = false;
+        return false;
+    } else {
+        std::cout << "[ERROR] Failed to receive data from server." << std::endl;
+        return false;
+    }
+}
+
 void myTeams::Client::run()
 {
     _isRunning = true;
     std::cout << "Client is running. Type 'exit' to quit." << std::endl;
 
+    std::vector<struct pollfd> fds(2);
+    fds[0].fd = STDIN_FILENO;
+    fds[0].events = POLLIN;
+    fds[1].fd = _serverSocket;
+    fds[1].events = POLLIN;
+
     while (_isRunning) {
-        std::string input;
-        std::getline(std::cin, input);
+        int pollResult = poll(fds.data(), fds.size(), -1);
 
-        if (input == "exit") {
+        if (pollResult < 0) {
+            std::cerr << "[ERROR] poll have failed." << std::endl;
+            break;
+        }
+
+        if (fds[0].revents & POLLIN) {
+            handleUserInput();
+        }
+
+        if (fds[1].revents & POLLIN) {
+            handleServerInput();
+        }
+
+        if (fds[1].revents & (POLLHUP | POLLERR)) {
+            std::cout << "[INFO] Server closed the connection." << std::endl;
             _isRunning = false;
-            std::cout << "Exiting client." << std::endl;
-        } else {
-    
-            // Print the user input to the console
-            std::cout << "You entered: " << input << std::endl;
-
-            // Send the user input to the server
-            std::string message = input + "\n";
-            send(_serverSocket, message.c_str(), message.size(), 0);
         }
     }
 }
