@@ -9,10 +9,6 @@
 
 bool myTeams::Client::displayHelp(int argc, char *argv[]) const
 {
-    if (argc != 3) {
-        std::cout << "USAGE: ./myteams_cli IP PORT" << std::endl;
-        return true;
-    }
     for (unsigned int i = 0; argv[i] != NULL; i++) {
         std::string arg = argv[i];
         if (arg == "-h" || arg == "--help") {
@@ -21,6 +17,11 @@ bool myTeams::Client::displayHelp(int argc, char *argv[]) const
             std::cout << "PORT is the port number on which the client connects." << std::endl;
             return true;
         }
+    }
+
+    if (argc != 3) {
+        std::cout << "USAGE: ./myteams_cli IP PORT" << std::endl;
+        return true;
     }
     return false;
 }
