@@ -7,6 +7,6 @@
 
 #include "Client.hpp"
 
-myTeams::Client::Client(struct sockaddr_in addr, int socket) : _server_addr(addr), _client_socket(socket)
+myTeams::Client::Client(int socket) : _client_socket(socket)
 {
 }

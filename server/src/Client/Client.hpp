@@ -16,14 +16,15 @@ namespace myTeams
     class Client
     {
         public:
-            Client(struct sockaddr_in addr, int socket);
+            Client(int socket);
             ~Client() = default;
 
             int getClientSocket() const { return _client_socket; };
+            int getUuid() const { return uuid; };
 
         private:
-            struct sockaddr_in _server_addr = {};
             int _client_socket = -1;
+            int uuid = 0;
             std::string _pseudo = "";
             bool _is_auth = false;
     };

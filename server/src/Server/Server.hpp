@@ -8,15 +8,7 @@
 #pragma once
 
     #include <iostream>
-    #include <cstdlib>
-    #include <string>
-    #include <sys/socket.h>
-    #include <netinet/in.h>
-    #include <unistd.h>
-    #include <poll.h>
     #include <csignal>
-    #include <memory>
-    #include <vector>
     #include <cerrno>
 
     #include "Client.hpp"
@@ -33,9 +25,11 @@ namespace myTeams
             PollFD _poll_fds = {};
             NetworkServer _network_server;
 
-            std::vector<std::unique_ptr<Client>> _clients = {};
+            std::vector<std::unique_ptr<Client>> _online_clients = {};
+
+            std::vector<std::pair<std::string, unsigned int>> _all_clients = {};
+
             static bool _is_running;
-            
             static void signalHandler(int signal);
 
         public:

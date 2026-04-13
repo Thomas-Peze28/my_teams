@@ -59,6 +59,6 @@ void myTeams::NetworkServer::acceptNewConnection()
         close(client_fd);
         return;
     }
-    _clients.push_back(std::make_unique<Client>(client_addr, client_fd));
+    _clients.push_back(std::make_unique<Client>(client_fd));
     _client_online++;
 }

@@ -21,7 +21,8 @@ myTeams::PollFD::~PollFD()
 void myTeams::PollFD::deleteClient(int client_socket)
 {
     for (unsigned int i = 1; i <= MAX_CLIENTS; i++)
-        if (_poll_fds[i].fd == client_socket) {
+        if (_poll_fds[i].fd == client_socket && _poll_fds[i].fd != -1) {
+            close(_poll_fds[i].fd);
             _poll_fds[i].fd = -1;
             _poll_fds[i].events = 0;
             return;
