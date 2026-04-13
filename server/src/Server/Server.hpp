@@ -20,6 +20,8 @@
     #include <cerrno>
 
     #include "Client.hpp"
+    #include "PollFD.hpp"
+    #include "NetworkServer.hpp"
 
     #define MAX_CLIENTS 1024
 
@@ -28,25 +30,20 @@ namespace myTeams
     class Server
     {
         private:
-            struct sockaddr_in _server_addr = {};
-            struct pollfd _poll_fds[MAX_CLIENTS + 1] = {};
+            PollFD _poll_fds = {};
+            NetworkServer _network_server;
+
             std::vector<std::unique_ptr<Client>> _clients = {};
-            int _server_socket = -1;
-            unsigned int _client_online = 0;
             static bool _is_running;
             
             static void signalHandler(int signal);
 
         public:
-            Server() = default;
+            Server();
             ~Server() = default;
 
-            void initServer(u_int16_t port);
             void runServer();
-
-            void addNewClient();
-            void deleteClient(int client_socket);
-
+            void initServer(uint16_t port) { _network_server.initNetworkServer(port); }
             bool displayHelp(int argc, char *argv[]) const;
     };
 }
