@@ -2,7 +2,7 @@
 ## EPITECH PROJECT, 2026
 ## Makefile
 ## File description:
-## my_teams
+## my_teams (Client)
 ##
 
 # Colors
@@ -19,6 +19,7 @@ SRC     =   src/main.cpp \
 
 HEADERS =	-I src/Server \
 			-I src/Client \
+			-I ../libs/myteams \
 
 CXX     =   g++
 
@@ -28,12 +29,14 @@ NAME    =   teams_cli
 
 CXXFLAGS = -Wextra -Wall $(HEADERS) -std=c++20
 
+LDFLAGS  = -L../libs/myteams -lmyteams
+
 .SILENT:
 
 all:    $(NAME)
 
 $(NAME):    $(OBJ)
-	$(CXX) -o $(NAME) $(OBJ) $(CXXFLAGS)
+	$(CXX) -o $(NAME) $(OBJ) $(CXXFLAGS) $(LDFLAGS)
 	@printf "$(GREEN)[OK]$(RESET) Binary '$(NAME)' compiled successfully.\n"
 
 clean:
