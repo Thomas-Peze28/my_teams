@@ -5,6 +5,15 @@
 ## my_teams
 ##
 
+# Colors
+RED=\033[0;31m
+GREEN=\033[0;32m
+YELLOW=\033[0;33m
+BLUE=\033[0;34m
+MAGENTA=\033[0;35m
+CYAN=\033[0;36m
+RESET=\033[0m
+
 SRC     =   src/main.cpp \
 			src/Client/Client.cpp \
 
@@ -25,15 +34,15 @@ all:    $(NAME)
 
 $(NAME):    $(OBJ)
 	$(CXX) -o $(NAME) $(OBJ) $(CXXFLAGS)
-# 	@echo "[OK] Binary '$(NAME)' compiled successfully."
+	@printf "$(GREEN)[OK]$(RESET) Binary '$(NAME)' compiled successfully.\n"
 
 clean:
 	rm -f $(OBJ)
-# 	@echo "[INFO] Object files removed."
+	@printf "$(BLUE)[INFO]$(RESET) Object files removed.\n"
 
 fclean: clean
 	rm -f $(NAME)
-# 	@echo "[INFO] Binary '$(NAME)' removed."
+	@printf "$(BLUE)[INFO]$(RESET) Binary '$(NAME)' removed.\n"
 
 re: fclean all
-# 	@echo "[INFO] Project rebuilt successfully."
+	@printf "$(BLUE)[INFO]$(RESET) Project rebuilt successfully.\n"
