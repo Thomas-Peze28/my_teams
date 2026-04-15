@@ -22,6 +22,8 @@ namespace myTeams
             void info() const override;
         
         private:
-            
+            std::string channel_uuid = "";
+            std::string channel_name = "";
+            std::string channel_description = "";
     };
 }

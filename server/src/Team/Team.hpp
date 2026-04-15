@@ -22,6 +22,8 @@ namespace myTeams
             void info() const override;
         
         private:
-            
+            std::string team_uuid = "";
+            std::string team_name = "";
+            std::string team_description = "";
     };
 }

@@ -16,6 +16,8 @@
     #include "PollFD.hpp"
     #include "NetworkServer.hpp"
     #include "Parser.hpp"
+    #include "Hub.hpp"
+    #include "Command.hpp"
 
     #define MAX_CLIENTS 1024
 
@@ -27,7 +29,9 @@ namespace myTeams
             PollFD _poll_fds = {};
             unsigned int _nb_clients = 0;
             NetworkServer _network_server;
-            Parser _parser = {};
+            Hub _hub = {};
+            Command _command;
+            Parser _parser;
 
             // 2 CLIENT [Sojourner, A23DNKDzo0...]
             std::map<int, std::unique_ptr<Client>> _online_clients = {};

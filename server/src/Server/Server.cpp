@@ -9,7 +9,7 @@
 
 bool myTeams::Server::_is_running = false;
 
-myTeams::Server::Server() : _network_server(_poll_fds, _nb_clients)
+myTeams::Server::Server() : _network_server(_poll_fds, _nb_clients), _command(_hub, _online_clients, _all_clients), _parser(_command, _online_clients)
 {
 }
 

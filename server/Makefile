@@ -13,6 +13,7 @@ SRC     =   src/main.cpp \
 			src/Parser/Parser.cpp \
 			src/Hub/Hub.cpp \
 			src/Team/Team.cpp \
+			src/Command/Command.cpp \
 			src/Channel/Channel.cpp \
 			src/Thread/Thread.cpp \
 
@@ -24,6 +25,8 @@ HEADERS =	-I src/Server \
 			-I src/Team \
 			-I src/Channel \
 			-I src/Thread \
+			-I src/Hub \
+			-I src/Command \
 			-I src/Include \
 
 CXX     =   g++

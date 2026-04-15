@@ -20,8 +20,11 @@ namespace myTeams
             void create(__attribute_maybe_unused__ std::string team_name, __attribute_maybe_unused__ std::string team_description) override;
             void list() const override;
             void info() const override;
-        
+
         private:
+            std::string thread_uuid = "";
+            std::string thread_title = "";
+            std::string thread_message = "";
             
     };
 }
