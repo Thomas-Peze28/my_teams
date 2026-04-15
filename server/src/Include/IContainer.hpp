@@ -2,7 +2,7 @@
 ** EPITECH PROJECT, 2026
 ** my_teams
 ** File description:
-** AComponent
+** IContainer
 */
 
 #pragma once
@@ -11,12 +11,12 @@
 
 namespace myTeams
 {
-    class AComponent
+    class IContainer
     {
         public:
-            virtual ~AComponent() = 0;
+            virtual ~IContainer() = default;
 
-            virtual void create(std::string content, std::string metadata) = 0;
+            virtual void create(__attribute_maybe_unused__ std::string content, __attribute_maybe_unused__ std::string metadata) = 0;
             virtual void list() const = 0;
             virtual void info() const = 0;
     };

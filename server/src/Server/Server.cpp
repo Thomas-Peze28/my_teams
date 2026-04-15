@@ -73,5 +73,4 @@ void myTeams::Server::runServer()
             }
         }
     }
-    std::cout << "There are " << _nb_clients << " client(s) still connected." << std::endl;
 }
