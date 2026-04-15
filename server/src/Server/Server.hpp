@@ -10,10 +10,12 @@
     #include <iostream>
     #include <csignal>
     #include <cerrno>
+    #include <map>
 
     #include "Client.hpp"
     #include "PollFD.hpp"
     #include "NetworkServer.hpp"
+    #include "Parser.hpp"
 
     #define MAX_CLIENTS 1024
 
@@ -23,11 +25,15 @@ namespace myTeams
     {
         private:
             PollFD _poll_fds = {};
+            unsigned int _nb_clients = 0;
             NetworkServer _network_server;
+            Parser _parser = {};
 
-            std::vector<std::unique_ptr<Client>> _online_clients = {};
+            // 2 CLIENT [Sojourner, A23DNKDzo0...]
+            std::map<int, std::unique_ptr<Client>> _online_clients = {};
 
-            std::vector<std::pair<std::string, unsigned int>> _all_clients = {};
+            // Sojourner A23DNKDzo0...
+            std::map<std::string, std::string> _all_clients = {};
 
             static bool _is_running;
             static void signalHandler(int signal);
@@ -38,6 +44,7 @@ namespace myTeams
 
             void runServer();
             void initServer(uint16_t port) { _network_server.initNetworkServer(port); }
+            void disconnectClient(int client_socket);
             bool displayHelp(int argc, char *argv[]) const;
     };
 }

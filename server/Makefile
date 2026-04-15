@@ -9,12 +9,14 @@ SRC     =   src/main.cpp \
 			src/Server/Server.cpp \
 			src/Client/Client.cpp \
 			src/PollFD/PollFD.cpp \
-			src/NetworkServer/NetworkServer.cpp
+			src/NetworkServer/NetworkServer.cpp \
+			src/Parser/Parser.cpp \
 
 HEADERS =	-I src/Server \
 			-I src/Client \
 			-I src/PollFD \
 			-I src/NetworkServer \
+			-I src/Parser \
 
 CXX     =   g++
 

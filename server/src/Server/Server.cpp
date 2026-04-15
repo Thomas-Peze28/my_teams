@@ -9,7 +9,7 @@
 
 bool myTeams::Server::_is_running = false;
 
-myTeams::Server::Server() : _network_server(_online_clients, _poll_fds)
+myTeams::Server::Server() : _network_server(_poll_fds, _nb_clients)
 {
 }
 
@@ -30,6 +30,13 @@ bool myTeams::Server::displayHelp(int argc, char *argv[]) const
     return false;
 }
 
+void myTeams::Server::disconnectClient(int client_socket)
+{
+    _online_clients.erase(client_socket);
+    _poll_fds.deleteClient(client_socket);
+    _nb_clients--;
+}
+
 void myTeams::Server::signalHandler(int signal)
 {
     if (signal == SIGINT)
@@ -44,17 +51,27 @@ void myTeams::Server::runServer()
     while (_is_running)  {
         if (poll(_poll_fds.getPollFDs(), MAX_CLIENTS + 1, 350) < 0)
             continue;
-        if (_poll_fds.getPollFDs()[0].revents & POLLIN)
-            _network_server.acceptNewConnection();
+        if (_poll_fds.getPollFDs()[0].revents & POLLIN) {
+            std::pair<int, std::unique_ptr<myTeams::Client>> new_client = _network_server.acceptNewConnection();
+            if (new_client.first != -1) {
+                _nb_clients++;
+                _online_clients[new_client.first] = std::move(new_client.second);
+            }
+        }
         for (unsigned int i = 1; i < MAX_CLIENTS + 1; i++) {
             if (_poll_fds.getPollFDs()[i].fd == -1)
                 continue;
             if (_poll_fds.getPollFDs()[i].revents & (POLLHUP | POLLERR | POLLNVAL)) {
-                _poll_fds.deleteClient(_poll_fds.getPollFDs()[i].fd);
+                disconnectClient(_poll_fds.getPollFDs()[i].fd);
                 continue;
             }
-            if (_poll_fds.getPollFDs()[i].revents & POLLIN)
-                std::cout << "Client " << _poll_fds.getPollFDs()[i].fd << " sent a message" << std::endl;
+            if (_poll_fds.getPollFDs()[i].revents & POLLIN) {
+                if (_parser.isClientDisconnected(_poll_fds.getPollFDs()[i].fd))
+                    disconnectClient(_poll_fds.getPollFDs()[i].fd);
+                else
+                    _parser.handleCommand(_poll_fds.getPollFDs()[i].fd);
+            }
         }
     }
+    std::cout << "There are " << _nb_clients << " client(s) still connected." << std::endl;
 }
