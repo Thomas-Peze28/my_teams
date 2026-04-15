@@ -17,6 +17,10 @@
     #include <arpa/inet.h>
     #include <poll.h>
 
+    extern "C" {
+        #include "logging_client.h"
+    }
+
 namespace myTeams
 {
     class Client

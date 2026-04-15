@@ -15,6 +15,10 @@
     #include "PollFD.hpp"
     #include "NetworkServer.hpp"
 
+    extern "C" {
+        #include "logging_server.h"
+    }
+
     #define MAX_CLIENTS 1024
 
 namespace myTeams
