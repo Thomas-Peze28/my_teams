@@ -5,58 +5,39 @@
 ## my_teams
 ##
 
-# --- Couleurs ---
-GREEN       =   \033[0;32m
-BLUE        =   \033[0;34m
-YELLOW      =   \033[1;33m
-RESET       =   \033[0m
+CLIENT_DIR = client
+SERVER_DIR = server
 
-CXX         =   g++
-CXXFLAGS    =   -Wextra -Wall -std=c++20
-
-# --- Configuration du Serveur ---
-SERVER_NAME =   myteams_server
-
-SERVER_SRC  =   src/Server/main.cpp \
-				src/Server/Server.cpp
-
-SERVER_OBJ  =   $(SERVER_SRC:.cpp=.o)
-SERVER_INC  =   -I ./src/Server
-
-# --- Configuration du Client ---
-CLIENT_NAME =   myteams_cli
-
-CLIENT_SRC  =   src/Client/main.cpp \
-				src/Client/Client.cpp
-
-CLIENT_OBJ  =   $(CLIENT_SRC:.cpp=.o)
-CLIENT_INC  =   -I ./src/Client
+CLIENT_BIN = teams_cli
+SERVER_BIN = teams_server
 
 .SILENT:
 
-all:    $(SERVER_NAME) $(CLIENT_NAME)
+.PHONY: all client server binaires clean fclean re
 
-# --- Règles de compilation indépendantes ---
-server: $(SERVER_NAME)
-client: $(CLIENT_NAME)
+all: client server binaires
 
-# Compilation du Serveur
-$(SERVER_NAME): $(SERVER_OBJ)
-	$(CXX) -o $(SERVER_NAME) $(SERVER_OBJ) $(CXXFLAGS) $(SERVER_INC)
-	@printf "$(GREEN)[OK]$(RESET) Binary '$(SERVER_NAME)' compiled successfully.\n"
+client:
+	@$(MAKE) -C $(CLIENT_DIR) --no-print-directory
 
-# Compilation du Client
-$(CLIENT_NAME): $(CLIENT_OBJ)
-	$(CXX) -o $(CLIENT_NAME) $(CLIENT_OBJ) $(CXXFLAGS) $(CLIENT_INC)
-	@printf "$(GREEN)[OK]$(RESET) Binary '$(CLIENT_NAME)' compiled successfully.\n"
+server:
+	@$(MAKE) -C $(SERVER_DIR) --no-print-directory
+
+binaires:
+	@cp $(CLIENT_DIR)/$(CLIENT_BIN) ./$(CLIENT_BIN)
+	@cp $(SERVER_DIR)/$(SERVER_BIN) ./$(SERVER_BIN)
+	@echo "[OK] Root binaries '$(CLIENT_BIN)' and '$(SERVER_BIN)' ready."
 
 clean:
-	rm -f $(SERVER_OBJ) $(CLIENT_OBJ)
-	@printf "$(BLUE)[INFO]$(RESET) Object files removed.\n"
+	@$(MAKE) -C $(CLIENT_DIR) clean --no-print-directory
+	@$(MAKE) -C $(SERVER_DIR) clean --no-print-directory
+	@echo "[INFO] Client and server object files removed."
 
 fclean: clean
-	rm -f $(SERVER_NAME) $(CLIENT_NAME)
-	@printf "$(BLUE)[INFO]$(RESET) Binaries removed.\n"
+	@$(MAKE) -C $(CLIENT_DIR) fclean --no-print-directory
+	@$(MAKE) -C $(SERVER_DIR) fclean --no-print-directory
+	@rm -f $(CLIENT_BIN) $(SERVER_BIN)
+	@echo "[INFO] Client and server binaries removed."
 
 re: fclean all
-	@printf "$(YELLOW)[INFO]$(RESET) Project rebuilt successfully.\n"
+	@echo "[INFO] Project rebuilt successfully."
