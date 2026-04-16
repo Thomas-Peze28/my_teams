@@ -7,7 +7,7 @@
 
 #include "NetworkServer.hpp"
 
-myTeams::NetworkServer::NetworkServer(std::vector<std::unique_ptr<Client>> &clients, PollFD &poll_fds) : _clients(clients), _poll_fds(poll_fds)
+myTeams::NetworkServer::NetworkServer(PollFD &poll_fds, unsigned int &client_online) : _poll_fds(poll_fds), _client_online(client_online)
 {
 }
 
@@ -40,25 +40,24 @@ void myTeams::NetworkServer::initNetworkServer(uint16_t port)
     _poll_fds.initPollFD(_server_socket);
 }
 
-void myTeams::NetworkServer::acceptNewConnection()
+std::pair<int, std::unique_ptr<myTeams::Client>> myTeams::NetworkServer::acceptNewConnection()
 {
-    struct sockaddr_in client_addr;
+    struct sockaddr_in client_addr = {};
     socklen_t client_len = sizeof(client_addr);
     int client_fd = -1;
 
     if (_server_socket == -1)
-        return;
+        return {-1, nullptr};
     client_fd = accept(_server_socket, (struct sockaddr *)&client_addr, &client_len);
     if (client_fd < 0)
-        return;
+        return {-1, nullptr};
     if (_client_online >= MAX_CLIENTS) {
         close(client_fd);
-        return;
+        return {-1, nullptr};
     }
     if (_poll_fds.addNewClient(client_fd) == false) {
         close(client_fd);
-        return;
+        return {-1, nullptr};
     }
-    _clients.push_back(std::make_unique<Client>(client_fd));
-    _client_online++;
+    return {client_fd, std::make_unique<Client>(client_fd)};
 }

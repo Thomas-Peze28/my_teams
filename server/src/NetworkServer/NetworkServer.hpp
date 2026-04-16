@@ -22,20 +22,19 @@ namespace myTeams
     class NetworkServer
     {
         public:
-            NetworkServer(std::vector<std::unique_ptr<Client>> &clients, PollFD &poll_fds);
+            NetworkServer(PollFD &poll_fds, unsigned int &client_online);
             ~NetworkServer() = default;
 
             void initNetworkServer(uint16_t port);
-            void acceptNewConnection();
+            std::pair<int, std::unique_ptr<Client>> acceptNewConnection();
 
             int getServerSocket() const { return _server_socket; };
             uint16_t getServerPort() const { return ntohs(_server_addr.sin_port); };
-        
+
         private:
-            std::vector<std::unique_ptr<Client>> &_clients;
             PollFD &_poll_fds;
             int _server_socket = -1;
-            struct sockaddr_in _server_addr = {};
             unsigned int _client_online = 0;
+            struct sockaddr_in _server_addr = {};
     };
 }

@@ -20,12 +20,17 @@ namespace myTeams
             ~Client() = default;
 
             int getClientSocket() const { return _client_socket; };
-            int getUuid() const { return uuid; };
+            std::string getUuid() const { return uuid; };
+            bool isAuthenticated() const { return _is_auth; };
 
         private:
             int _client_socket = -1;
-            int uuid = 0;
+            std::string uuid = "";
             std::string _pseudo = "";
             bool _is_auth = false;
+
+            std::string current_team = "";
+            std::string current_channel = "";
+            std::string current_thread = "";
     };
 }
