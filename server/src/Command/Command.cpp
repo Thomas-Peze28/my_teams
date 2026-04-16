@@ -38,7 +38,7 @@ void myTeams::Command::login(CommandData& cmd, int client_socket) const
         return;
     for (const auto& [socket, client] : _online_clients)
         if (client && client->getClientPseudo() == user_pseudo) {
-            dprintf(client_socket, "900 ALREADY_EXIST (error: user already logged in)\n");
+            dprintf(client_socket, "900 ALREADY_EXIST\n");
             return;
         }
     auto it = _all_clients.find(user_pseudo);
@@ -55,7 +55,7 @@ void myTeams::Command::login(CommandData& cmd, int client_socket) const
     _online_clients[client_socket]->setClientUuid(user_uuid);
     _online_clients[client_socket]->setClientPseudo(user_pseudo);
     _online_clients[client_socket]->setClientAuth(true);
-    dprintf(client_socket, "100 LOGIN %s %s\n", user_uuid.c_str(), user_pseudo.c_str());
+    dprintf(client_socket, "100 LOGIN '%s' '%s'\n", user_uuid.c_str(), user_pseudo.c_str());
     server_event_user_logged_in(user_uuid.c_str());
 }
 
@@ -68,7 +68,7 @@ void myTeams::Command::logout(__attribute_maybe_unused__ CommandData& cmd, int c
     _online_clients[client_socket]->setClientUuid("");
     _online_clients[client_socket]->setClientAuth(false);
     server_event_user_logged_out(client_uuid.c_str());
-    dprintf(client_socket, "101 LOGOUT %s %s\n", client_pseudo.c_str(), client_uuid.c_str());
+    dprintf(client_socket, "101 LOGOUT '%s' '%s'\n", client_pseudo.c_str(), client_uuid.c_str());
 }
 
 void myTeams::Command::users(__attribute_maybe_unused__ CommandData& cmd, int client_socket) const
@@ -82,7 +82,7 @@ void myTeams::Command::users(__attribute_maybe_unused__ CommandData& cmd, int cl
                 break;
             }
         }
-        dprintf(client_socket, "103 USERS %s %s %d\n", uuid.c_str(), pseudo.c_str(), status ? 1 : 0);
+        dprintf(client_socket, "103 USERS '%s' '%s' '%d'\n", uuid.c_str(), pseudo.c_str(), status ? 1 : 0);
     }
     dprintf(client_socket, "999 LIST_END\n");
 }
@@ -100,11 +100,11 @@ void myTeams::Command::user(CommandData& cmd, int client_socket) const
                     break;
                 }
             }
-            dprintf(client_socket, "105 USER %s %s %d\n", uuid.c_str(), pseudo.c_str(), status ? 1 : 0);
+            dprintf(client_socket, "105 USER '%s' '%s' '%d'\n", uuid.c_str(), pseudo.c_str(), status ? 1 : 0);
             return;
         }
     }
-    dprintf(client_socket, "904 UNKNOWN_USER_UUID %s (error: user not found)\n", user_uuid.c_str());
+    dprintf(client_socket, "904 UNKNOWN_USER_UUID '%s' (error: user not found)\n", user_uuid.c_str());
 }
 
 void myTeams::Command::use(CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
@@ -114,16 +114,16 @@ void myTeams::Command::use(CommandData& cmd, __attribute_maybe_unused__ int clie
     std::string arg3 = cmd.args.size() > 2 ? cmd.args[2] : "";
 
     if (_hub.getTeam(arg1) == nullptr) {
-        dprintf(client_socket, "909 UNKNOWN_TEAM_UUID %s (error: team not found)\n", arg1.c_str());
+        dprintf(client_socket, "909 UNKNOWN_TEAM_UUID '%s' (error: team not found)\n", arg1.c_str());
         return;
     } else if (_hub.getTeam(arg1)->isAvailableClient(_online_clients[client_socket]->getUuid()) == false) {
-        dprintf(client_socket, "908 CLIENT_NOT_IN_TEAM %s (error: client is not in the specified team)\n", _online_clients[client_socket]->getUuid().c_str());
+        dprintf(client_socket, "908 CLIENT_NOT_IN_TEAM '%s' (error: client is not in the specified team)\n", _online_clients[client_socket]->getUuid().c_str());
         return;
     } else if (!arg2.empty() && _hub.getTeam(arg1)->getChannel(arg2) == nullptr) {
-        dprintf(client_socket, "905 UNKNOWN_CHANNEL_UUID %s (error: channel not found)\n", arg2.c_str());
+        dprintf(client_socket, "905 UNKNOWN_CHANNEL_UUID '%s' (error: channel not found)\n", arg2.c_str());
         return;
     } else if (!arg3.empty() && _hub.getTeam(arg1)->getChannel(arg2)->getThread(arg3) == nullptr) {
-        dprintf(client_socket, "906 UNKNOWN_THREAD_UUID %s (error: thread not found)\n", arg3.c_str());
+        dprintf(client_socket, "906 UNKNOWN_THREAD_UUID '%s' (error: thread not found)\n", arg3.c_str());
         return;
     }
     _online_clients[client_socket]->setCurrentTeam(arg1);
