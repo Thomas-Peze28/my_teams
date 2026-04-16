@@ -110,7 +110,7 @@ void myTeams::Client::initRoutes()
         if (args.size() >= 2)
             client_event_logged_in(args[0].c_str(), args[1].c_str());
     };
-    _routes["101 LOGOUT"] = [this](const std::vector<std::string> &args) {
+    _routes["101 LOGOUT"] = [](const std::vector<std::string> &args) {
         if (args.size() >= 2)
             client_event_logged_out(args[0].c_str(), args[1].c_str());
     };
