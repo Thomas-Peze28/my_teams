@@ -14,6 +14,7 @@
     #include <functional>
     #include <string>
     #include <cstdint>
+    #include <sstream>
 
     #include <unistd.h>
     #include <sys/socket.h>

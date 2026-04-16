@@ -360,7 +360,13 @@ bool myTeams::Client::handleServerInput()
 
     if (bytesRead > 0) {
         buffer.resize(bytesRead);
-        processServerMessage(buffer);
+        std::stringstream ss(buffer);
+        std::string line;
+        while (std::getline(ss, line, '\n')) {
+            if (!line.empty()) {
+                processServerMessage(line);
+            }
+        }
         return true;
     } else if (bytesRead == 0) {
         std::cout << "[INFO] Server closed the connection." << std::endl;
