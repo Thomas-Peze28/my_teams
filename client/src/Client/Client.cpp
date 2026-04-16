@@ -322,7 +322,7 @@ void myTeams::Client::initRoutes()
     };
 
     // ==========================================
-    // BALISES SILENCIEUSES
+    // QUIET ROUTES
     // ==========================================
     _routes["000 LIST_START"] = [](const std::vector<std::string> &) {};
     _routes["999 LIST_END"] = [](const std::vector<std::string> &) {};
