@@ -8,6 +8,10 @@
 #pragma once
 
     #include "IContainer.hpp"
+    #include "Team.hpp"
+
+    #include <map>
+    #include <memory>
 
 namespace myTeams
 {
@@ -21,7 +25,9 @@ namespace myTeams
             void list() const override;
             void info() const override;
         
+            const Team *getTeam(const std::string &team_uuid) const;
+
         private:
-            
+            std::map<std::string, std::unique_ptr<Team>> _teams = {};
     };
 }

@@ -9,6 +9,9 @@
 
     #include "IContainer.hpp"
 
+    #include <string>
+    #include <map>
+
 namespace myTeams
 {
     class Thread : public IContainer
@@ -25,6 +28,7 @@ namespace myTeams
             std::string thread_uuid = "";
             std::string thread_title = "";
             std::string thread_message = "";
-            
+
+            std::map<std::string, std::string> _replies = {};
     };
 }

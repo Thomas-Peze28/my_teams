@@ -107,7 +107,30 @@ void myTeams::Command::user(CommandData& cmd, int client_socket) const
     dprintf(client_socket, "904 UNKNOWN_USER_UUID %s (error: user not found)\n", user_uuid.c_str());
 }
 
+void myTeams::Command::use(CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
+{
+    std::string arg1 = cmd.args[0];
+    std::string arg2 = cmd.args.size() > 1 ? cmd.args[1] : "";
+    std::string arg3 = cmd.args.size() > 2 ? cmd.args[2] : "";
 
+    if (_hub.getTeam(arg1) == nullptr) {
+        dprintf(client_socket, "909 UNKNOWN_TEAM_UUID %s (error: team not found)\n", arg1.c_str());
+        return;
+    } else if (_hub.getTeam(arg1)->isAvailableClient(_online_clients[client_socket]->getUuid()) == false) {
+        dprintf(client_socket, "908 CLIENT_NOT_IN_TEAM %s (error: client is not in the specified team)\n", _online_clients[client_socket]->getUuid().c_str());
+        return;
+    } else if (!arg2.empty() && _hub.getTeam(arg1)->getChannel(arg2) == nullptr) {
+        dprintf(client_socket, "905 UNKNOWN_CHANNEL_UUID %s (error: channel not found)\n", arg2.c_str());
+        return;
+    } else if (!arg3.empty() && _hub.getTeam(arg1)->getChannel(arg2)->getThread(arg3) == nullptr) {
+        dprintf(client_socket, "906 UNKNOWN_THREAD_UUID %s (error: thread not found)\n", arg3.c_str());
+        return;
+    }
+    _online_clients[client_socket]->setCurrentTeam(arg1);
+    _online_clients[client_socket]->setCurrentChannel(arg2);
+    _online_clients[client_socket]->setCurrentThread(arg3);
+    dprintf(client_socket, "800 CONTEXT_SET\n");
+}
 
 
 
@@ -146,11 +169,6 @@ void myTeams::Command::subscribed(__attribute_maybe_unused__ CommandData& cmd, _
 void myTeams::Command::unsubscribe(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
 {
     std::cout << "Unsubscribe command executed." << std::endl;
-}
-
-void myTeams::Command::use(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "Use command executed." << std::endl;
 }
 
 void myTeams::Command::create(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
