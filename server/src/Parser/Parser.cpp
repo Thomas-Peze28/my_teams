@@ -80,22 +80,18 @@ void myTeams::Parser::executeCommand(CommandData& cmd, int client_socket) const
     auto it = handlers.find(cmd.name);
 
     if (it == handlers.end()) {
-        std::cout << "Unknown command: " << cmd.name << std::endl;
+        dprintf(client_socket, "919 UNKNOW COMMAND: %s\n", cmd.name.c_str());
         return;
     }
-    if (client_it == _online_clients.end() || client_it->second == nullptr) {
-        std::cout << "Unknown client: " << client_socket << std::endl;
+    if (client_it == _online_clients.end() || client_it->second == nullptr)
         return;
-    }
-
     bool is_authenticated = client_it->second->isAuthenticated();
-
     if (!is_authenticated && it->second.requires_auth) {
-        std::cout << "You must be logged in to use: " << cmd.name << std::endl;
+        dprintf(client_socket, "902 UNAUTHORIZED (error: not logged in)\n");
         return;
     }
     if (cmd.nb_args < it->second.min_args || cmd.nb_args > it->second.max_args) {
-        std::cout << "Invalid number of arguments for command: " << cmd.name << std::endl;
+        dprintf(client_socket, "920 INVALID NUMBERS OF ARGUMENTS FOR COMMAND: %s\n", cmd.name.c_str());
         return;
     }
     (_command.*(it->second.handler))(cmd, client_socket);
