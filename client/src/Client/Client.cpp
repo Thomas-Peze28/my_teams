@@ -81,6 +81,30 @@ bool myTeams::Client::handleUserInput()
     return true;
 }
 
+std::vector<std::string> myTeams::Client::extractArgs(const std::string &message)
+{
+    std::vector<std::string> args;
+    size_t pos = 0;
+
+    while ((pos = message.find('\'', pos)) != std::string::npos) {
+        size_t endPos = message.find('\'', pos + 1);
+        if (endPos == std::string::npos)
+            break;
+        args.push_back(message.substr(pos + 1, endPos - pos - 1));
+        pos = endPos + 1;
+    }
+    return args;
+}
+
+void myTeams::Client::processServerMessage(const std::string &message)
+{
+    std::vector<std::string> args = extractArgs(message);
+
+    if (message.find("200 LOGIN") == 0 && args.size() >= 2) {
+        client_event_logged_in(args[0].c_str(), args[1].c_str());
+    }
+}
+
 bool myTeams::Client::handleServerInput()
 {
     std::string buffer(1024, '\0');
@@ -88,7 +112,7 @@ bool myTeams::Client::handleServerInput()
 
     if (bytesRead > 0) {
         buffer.resize(bytesRead);
-        std::cout << "[SERVER] " << buffer;
+        processServerMessage(buffer);
         return true;
     } else if (bytesRead == 0) {
         std::cout << "[INFO] Server closed the connection." << std::endl;

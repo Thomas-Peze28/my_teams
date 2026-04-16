@@ -36,6 +36,8 @@ namespace myTeams
             bool connectToServer();
             bool handleServerInput();
             bool handleUserInput();
+            void processServerMessage(const std::string &message);
+            std::vector<std::string> extractArgs(const std::string &message);
     
         public:
             Client() = default;
