@@ -103,16 +103,233 @@ std::vector<std::string> myTeams::Client::extractArgs(const std::string &message
 
 void myTeams::Client::initRoutes()
 {
+    // ==========================================
+    // 100-199 : USER MANAGEMENT
+    // ==========================================
     _routes["100 LOGIN"] = [](const std::vector<std::string> &args) {
-        if (args.size() >= 2) {
+        if (args.size() >= 2)
             client_event_logged_in(args[0].c_str(), args[1].c_str());
-        }
     };
-    _routes["101 LOGOUT"] = [](const std::vector<std::string> &args) {
-        if (args.size() >= 2) {
+    _routes["101 LOGOUT"] = [this](const std::vector<std::string> &args) {
+        if (args.size() >= 2)
             client_event_logged_out(args[0].c_str(), args[1].c_str());
-        }
     };
+    _routes["103 USERS"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_users(args[0].c_str(), args[1].c_str(), std::stoi(args[2]));
+    };
+    _routes["105 USER"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_user(args[0].c_str(), args[1].c_str(), std::stoi(args[2]));
+    };
+
+    // ==========================================
+    // 200-299 : MESSAGE MANAGEMENT
+    // ==========================================
+    _routes["201 MSGS"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_private_message_print_messages(args[0].c_str(), (time_t)std::stol(args[1]), args[2].c_str());
+    };
+
+    // ==========================================
+    // 300-399 : SUBSCRIPTION MANAGEMENT
+    // ==========================================
+    _routes["300 SUB_OK"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 2)
+            client_print_subscribed(args[0].c_str(), args[1].c_str());
+    };
+    _routes["301 UNSUB_OK"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 2)
+            client_print_unsubscribed(args[0].c_str(), args[1].c_str());
+    };
+    _routes["302 SUB_TEAMS"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_teams(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+    _routes["303 SUB_USERS"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_users(args[0].c_str(), args[1].c_str(), std::stoi(args[2]));
+    };
+
+    // ==========================================
+    // 400-499 : TEAM MANAGEMENT
+    // ==========================================
+    _routes["400 TEAM_CREATED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_team_created(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+    _routes["401 TEAM"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_teams(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+    _routes["402 USER_INFO"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_user(args[0].c_str(), args[1].c_str(), std::stoi(args[2]));
+    };
+
+    // ==========================================
+    // 500-599 : CHANNEL MANAGEMENT
+    // ==========================================
+    _routes["500 CHANNEL_CREATED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_channel_created(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+    _routes["501 CHANNEL"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_team_print_channels(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+    _routes["502 TEAM_INFO"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_team(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+
+    // ==========================================
+    // 600-699 : THREAD MANAGEMENT
+    // ==========================================
+    _routes["600 THREAD_CREATED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 5)
+            client_print_thread_created(args[0].c_str(), args[1].c_str(), (time_t)std::stol(args[2]), args[3].c_str(), args[4].c_str());
+    };
+    _routes["601 THREAD"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 5)
+            client_channel_print_threads(args[0].c_str(), args[1].c_str(), (time_t)std::stol(args[2]), args[3].c_str(), args[4].c_str());
+    };
+    _routes["602 CHANNEL_INFO"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_print_channel(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+
+    // ==========================================
+    // 700-799 : REPLY MANAGEMENT
+    // ==========================================
+    _routes["700 REPLY_CREATED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 4)
+            client_print_reply_created(args[0].c_str(), args[1].c_str(), (time_t)std::stol(args[2]), args[3].c_str());
+    };
+    _routes["701 REPLY"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 4)
+            client_thread_print_replies(args[0].c_str(), args[1].c_str(), (time_t)std::stol(args[2]), args[3].c_str());
+    };
+    _routes["702 THREAD_INFO"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 5)
+            client_print_thread(args[0].c_str(), args[1].c_str(), (time_t)std::stol(args[2]), args[3].c_str(), args[4].c_str());
+    };
+
+    // ==========================================
+    // 950-959 : EVENT NOTIFICATIONS
+    // ==========================================
+    _routes["950 USER_LOGGED_IN"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 2)
+            client_event_logged_in(args[0].c_str(), args[1].c_str());
+    };
+    _routes["951 USER_LOGGED_OUT"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 2)
+            client_event_logged_out(args[0].c_str(), args[1].c_str());
+    };
+    _routes["952 PRIVATE_MESSAGE_RECEIVED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 2)
+            client_event_private_message_received(args[0].c_str(), args[1].c_str());
+    };
+    _routes["953 TEAM_CREATED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_event_team_created(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+    _routes["954 CHANNEL_CREATED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 3)
+            client_event_channel_created(args[0].c_str(), args[1].c_str(), args[2].c_str());
+    };
+    _routes["955 THREAD_CREATED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 5)
+            client_event_thread_created(args[0].c_str(), args[1].c_str(), (time_t)std::stol(args[2]), args[3].c_str(), args[4].c_str());
+    };
+    _routes["956 REPLY_CREATED"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 4)
+            client_event_thread_reply_received(args[0].c_str(), args[1].c_str(), args[2].c_str(), args[3].c_str());
+    };
+
+    // ==========================================
+    // 900-918 : ERROR CODE REFERENCE
+    // ==========================================
+    _routes["900 ALREADY_EXIST"] = [](const std::vector<std::string> &) {
+            client_error_already_exist();
+        };
+    _routes["901 UNAUTHORIZED"] = [](const std::vector<std::string> &) {
+            client_error_unauthorized();
+        };
+    _routes["902 UNAUTHORIZED"] = [](const std::vector<std::string> &) {
+            client_error_unauthorized();
+        };
+    _routes["903 UNKNOWN_USER"] = [](const std::vector<std::string> &) {
+            client_error_unknown_user("");
+        };
+    _routes["904 UNKNOWN_USER_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_user(args[0].c_str());
+    };
+    _routes["905 UNKNOWN_USER_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_user(args[0].c_str());
+    };
+    _routes["906 UNAUTHORIZED"] = [](const std::vector<std::string> &) {
+        client_error_unauthorized();
+    };
+    _routes["907 UNKNOWN_USER_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_user(args[0].c_str());
+    };
+    _routes["908 UNAUTHORIZED"] = [](const std::vector<std::string> &) {
+        client_error_unauthorized();
+    };
+    _routes["909 UNKNOWN_TEAM_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_team(args[0].c_str());
+    };
+    _routes["910 UNKNOWN_TEAM_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_team(args[0].c_str());
+    };
+    _routes["911 UNKNOWN_TEAM_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_team(args[0].c_str());
+    };
+    _routes["912 UNKNOWN_TEAM_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_team(args[0].c_str());
+    };
+    _routes["913 UNKNOWN_CHANNEL_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_channel(args[0].c_str());
+    };
+    _routes["914 UNKNOWN_CHANNEL_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_channel(args[0].c_str());
+    };
+    _routes["915 UNKNOWN_CHANNEL_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_channel(args[0].c_str());
+    };
+    _routes["916 UNKNOWN_THREAD_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_thread(args[0].c_str());
+    };
+    _routes["917 UNKNOWN_THREAD_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_thread(args[0].c_str());
+    };
+    _routes["918 UNKNOWN_THREAD_UUID"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 1)
+            client_error_unknown_thread(args[0].c_str());
+    };
+
+    // ==========================================
+    // BALISES SILENCIEUSES
+    // ==========================================
+    _routes["000 LIST_START"] = [](const std::vector<std::string> &) {};
+    _routes["999 LIST_END"] = [](const std::vector<std::string> &) {};
+    _routes["001 Welcome to MyTeams!"] = [](const std::vector<std::string> &) {};
+    _routes["002 *help menu*"] = [](const std::vector<std::string> &) {};
+    _routes["200 SEND_OK"] = [](const std::vector<std::string> &) {};
+    _routes["800 CONTEXT_SET"] = [](const std::vector<std::string> &) {};
 }
 
 void myTeams::Client::processServerMessage(const std::string &message)
@@ -126,9 +343,6 @@ void myTeams::Client::processServerMessage(const std::string &message)
     while (!key.empty() && std::isspace(key.back())) {
         key.pop_back();
     }
-
-    if (key == "000 LIST_START" || key == "999 LIST_END" || key == "200 SEND_OK")
-        return;
 
     auto it = _routes.find(key);
     if (it != _routes.end()) {
