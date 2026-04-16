@@ -37,6 +37,7 @@ HEADERS =	-I src/Server \
 			-I src/Hub \
 			-I src/Command \
 			-I src/Include \
+			-I ../libs/myteams \
 
 CXX     =   g++
 
