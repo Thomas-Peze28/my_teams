@@ -13,6 +13,7 @@
     #include "CommandData.hpp"
     #include <map>
     #include <memory>
+    #include "logging_server.h"
 
 namespace myTeams
 {
