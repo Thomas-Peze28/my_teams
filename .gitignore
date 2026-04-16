@@ -4,3 +4,4 @@
 myteams_server
 myteams_cli
 *.pdf
+.vscode/

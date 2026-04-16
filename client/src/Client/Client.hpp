@@ -10,6 +10,10 @@
     #include <iostream>
     #include <cstdlib>
     #include <vector>
+    #include <map>
+    #include <functional>
+    #include <string>
+    #include <cstdint>
 
     #include <unistd.h>
     #include <sys/socket.h>
@@ -27,20 +31,25 @@ namespace myTeams
     {
         private:
             std::string _ip;
-            u_int16_t _port = 0;
+            uint16_t _port = 0;
             int _serverSocket = -1;
             bool _isRunning = false;
 
             bool connectToServer();
             bool handleServerInput();
             bool handleUserInput();
-    
+            void processServerMessage(const std::string &message);
+            std::vector<std::string> extractArgs(const std::string &message);
+
+            std::map<std::string, std::function<void(const std::vector<std::string>&)>> _routes;
+            void initRoutes();
+
         public:
-            Client() = default;
+            Client();
             ~Client();
 
             bool displayHelp(int argc, char *argv[]) const;
-            void initClient(const std::string &ip, u_int16_t port);
+            void initClient(const std::string &ip, uint16_t port);
             void run();
     };
 }
