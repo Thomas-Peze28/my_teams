@@ -10,6 +10,8 @@
     #include <iostream>
     #include <cstdlib>
     #include <vector>
+    #include <map>
+    #include <functional>
     #include <string>
     #include <cstdint>
 
@@ -38,9 +40,12 @@ namespace myTeams
             bool handleUserInput();
             void processServerMessage(const std::string &message);
             std::vector<std::string> extractArgs(const std::string &message);
-    
+
+            std::map<std::string, std::function<void(const std::vector<std::string>&)>> _routes;
+            void initRoutes();
+
         public:
-            Client() = default;
+            Client();
             ~Client();
 
             bool displayHelp(int argc, char *argv[]) const;

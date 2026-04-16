@@ -7,6 +7,11 @@
 
 #include "Client.hpp"
 
+myTeams::Client::Client()
+{
+    initRoutes();
+}
+
 myTeams::Client::~Client()
 {
      if (_serverSocket != -1) {
@@ -96,13 +101,43 @@ std::vector<std::string> myTeams::Client::extractArgs(const std::string &message
     return args;
 }
 
+void myTeams::Client::initRoutes()
+{
+    _routes["100 LOGIN"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 2) {
+            client_event_logged_in(args[0].c_str(), args[1].c_str());
+        }
+    };
+    _routes["101 LOGOUT"] = [](const std::vector<std::string> &args) {
+        if (args.size() >= 2) {
+            client_event_logged_out(args[0].c_str(), args[1].c_str());
+        }
+    };
+}
+
 void myTeams::Client::processServerMessage(const std::string &message)
 {
-    std::vector<std::string> args = extractArgs(message);
-
-    if (message.find("200 LOGIN") == 0 && args.size() >= 2) {
-        client_event_logged_in(args[0].c_str(), args[1].c_str());
+    std::string key = message;
+    size_t quotePos = message.find('\'');
+    if (quotePos != std::string::npos) {
+        key = message.substr(0, quotePos);
     }
+    
+    while (!key.empty() && std::isspace(key.back())) {
+        key.pop_back();
+    }
+
+    if (key == "000 LIST_START" || key == "999 LIST_END" || key == "200 SEND_OK")
+        return;
+
+    auto it = _routes.find(key);
+    if (it != _routes.end()) {
+        std::vector<std::string> args = extractArgs(message);
+        it->second(args);
+    } else {
+        std::cout << "[ERROR] Unhandled message from server: " << message << std::endl;
+    }
+    
 }
 
 bool myTeams::Client::handleServerInput()
