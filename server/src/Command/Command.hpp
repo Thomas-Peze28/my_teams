@@ -13,7 +13,11 @@
     #include "CommandData.hpp"
     #include <map>
     #include <memory>
+    #include <uuid/uuid.h>
+
+    extern "C" {
     #include "logging_server.h"
+    }
 
 namespace myTeams
 {

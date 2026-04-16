@@ -51,6 +51,7 @@ void myTeams::Command::login(CommandData& cmd, __attribute_maybe_unused__ int cl
     const std::string& user_uuid = it->second;
     _online_clients[client_socket]->setClientUuid(user_uuid);
     _online_clients[client_socket]->setClientPseudo(user_pseudo);
+    dprintf(client_socket, "100 LOGIN %s %s\n", user_uuid.c_str(), user_pseudo.c_str());
     server_event_user_logged_in(user_uuid.c_str());
 }
 

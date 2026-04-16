@@ -47,7 +47,7 @@ NAME    =   myteams_server
 
 CXXFLAGS = -Wextra -Wall $(HEADERS) -std=c++20
 
-LDFLAGS  = -L../libs/myteams -lmyteams
+LDFLAGS  = -L../libs/myteams -lmyteams -luuid
 
 .SILENT:
 
