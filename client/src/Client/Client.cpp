@@ -67,7 +67,6 @@ void myTeams::Client::initClient(const std::string &ip, uint16_t port)
         exit(EXIT_FAILURE);
     }
     std::cout << "Connected to server at " << _ip << ":" << _port << std::endl;
-    client_event_logged_in("1234-uuid-test", "Thomas_Test"); // Exemple de test de la fonction de logging client
 }
 
 bool myTeams::Client::handleUserInput()
