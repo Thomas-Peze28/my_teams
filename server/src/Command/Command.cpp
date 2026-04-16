@@ -31,13 +31,16 @@ void myTeams::Command::help(__attribute_maybe_unused__ CommandData& cmd, int cli
     dprintf(client_socket, "/info : based on the context, display details of the current resource (see below)\n");
 }
 
-#include <uuid/uuid.h>
-
-void myTeams::Command::login(CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
+void myTeams::Command::login(CommandData& cmd, int client_socket) const
 {
     const std::string user_pseudo = cmd.args[0];
     if (user_pseudo.empty())
         return;
+    for (const auto& [socket, client] : _online_clients)
+        if (client && client->getClientPseudo() == user_pseudo) {
+            dprintf(client_socket, "900 ALREADY_EXIST (error: user already logged in)\n");
+            return;
+        }
     auto it = _all_clients.find(user_pseudo);
     if (it == _all_clients.end()) {
         uuid_t uu;
@@ -51,13 +54,21 @@ void myTeams::Command::login(CommandData& cmd, __attribute_maybe_unused__ int cl
     const std::string& user_uuid = it->second;
     _online_clients[client_socket]->setClientUuid(user_uuid);
     _online_clients[client_socket]->setClientPseudo(user_pseudo);
+    _online_clients[client_socket]->setClientAuth(true);
     dprintf(client_socket, "100 LOGIN %s %s\n", user_uuid.c_str(), user_pseudo.c_str());
     server_event_user_logged_in(user_uuid.c_str());
 }
 
-void myTeams::Command::logout(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
+void myTeams::Command::logout(__attribute_maybe_unused__ CommandData& cmd, int client_socket) const
 {
-    std::cout << "Logout command executed." << std::endl;
+    std::string client_uuid = _online_clients[client_socket]->getUuid();
+    std::string client_pseudo = _online_clients[client_socket]->getClientPseudo();
+
+    _online_clients[client_socket]->setClientPseudo("");
+    _online_clients[client_socket]->setClientUuid("");
+    _online_clients[client_socket]->setClientAuth(false);
+    server_event_user_logged_out(client_uuid.c_str());
+    dprintf(client_socket, "101 LOGOUT %s %s\n", client_pseudo.c_str(), client_uuid.c_str());
 }
 
 void myTeams::Command::users(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const

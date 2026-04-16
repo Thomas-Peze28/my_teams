@@ -21,8 +21,10 @@ namespace myTeams
 
             void setClientPseudo(std::string pseudo) { _pseudo = pseudo; };
             void setClientUuid(std::string uuid) { _uuid = uuid; };
+            void setClientAuth(bool is_auth) { _is_auth = is_auth; };
 
             int getClientSocket() const { return _client_socket; };
+            std::string getClientPseudo() const { return _pseudo; };
             std::string getUuid() const { return _uuid; };
             bool isAuthenticated() const { return _is_auth; };
 
