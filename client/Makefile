@@ -25,7 +25,7 @@ CXX     =   g++
 
 OBJ     =   $(SRC:.cpp=.o)
 
-NAME    =   teams_cli
+NAME    =   myteams_cli
 
 CXXFLAGS = -Wextra -Wall $(HEADERS) -std=c++20
 

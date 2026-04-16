@@ -43,7 +43,7 @@ CXX     =   g++
 
 OBJ     =   $(SRC:.cpp=.o)
 
-NAME    =   teams_server
+NAME    =   myteams_server
 
 CXXFLAGS = -Wextra -Wall $(HEADERS) -std=c++20
 

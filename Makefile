@@ -17,8 +17,8 @@ RESET=\033[0m
 CLIENT_DIR = client
 SERVER_DIR = server
 
-CLIENT_BIN = teams_cli
-SERVER_BIN = teams_server
+CLIENT_BIN = myteams_cli
+SERVER_BIN = myteams_server
 
 .SILENT:
 
