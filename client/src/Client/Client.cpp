@@ -76,7 +76,7 @@ bool myTeams::Client::handleUserInput()
         return true;
     }
 
-    std::string message = "[CLIENT] " + input + "\n";
+    std::string message = input + "\n";
     send(_serverSocket, message.c_str(), message.size(), 0);
     return true;
 }
