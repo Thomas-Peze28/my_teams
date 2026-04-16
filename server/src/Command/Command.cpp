@@ -71,15 +71,57 @@ void myTeams::Command::logout(__attribute_maybe_unused__ CommandData& cmd, int c
     dprintf(client_socket, "101 LOGOUT %s %s\n", client_pseudo.c_str(), client_uuid.c_str());
 }
 
-void myTeams::Command::users(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
+void myTeams::Command::users(__attribute_maybe_unused__ CommandData& cmd, int client_socket) const
 {
-    std::cout << "Users command executed." << std::endl;
+    dprintf(client_socket, "000 LIST_START\n");
+    for (const auto& [pseudo, uuid] : _all_clients) {
+        bool status = false;
+        for (const auto& [socket, client] : _online_clients) {
+            if (client && client->getUuid() == uuid) {
+                status = true;
+                break;
+            }
+        }
+        dprintf(client_socket, "103 USERS %s %s %d\n", uuid.c_str(), pseudo.c_str(), status ? 1 : 0);
+    }
+    dprintf(client_socket, "999 LIST_END\n");
 }
 
-void myTeams::Command::user(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
+void myTeams::Command::user(CommandData& cmd, int client_socket) const
 {
-    std::cout << "User command executed." << std::endl;
+    std::string user_uuid = cmd.args[0];
+
+    for (const auto& [pseudo, uuid] : _all_clients) {
+        if (uuid == user_uuid) {
+            bool status = false;
+            for (const auto& [socket, client] : _online_clients) {
+                if (client && client->getUuid() == uuid) {
+                    status = true;
+                    break;
+                }
+            }
+            dprintf(client_socket, "105 USER %s %s %d\n", uuid.c_str(), pseudo.c_str(), status ? 1 : 0);
+            return;
+        }
+    }
+    dprintf(client_socket, "904 UNKNOWN_USER_UUID %s (error: user not found)\n", user_uuid.c_str());
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 void myTeams::Command::send(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
 {
