@@ -10,6 +10,8 @@
     #include <iostream>
     #include <cstdlib>
     #include <vector>
+    #include <string>
+    #include <cstdint>
 
     #include <unistd.h>
     #include <sys/socket.h>
@@ -27,7 +29,7 @@ namespace myTeams
     {
         private:
             std::string _ip;
-            u_int16_t _port = 0;
+            uint16_t _port = 0;
             int _serverSocket = -1;
             bool _isRunning = false;
 
@@ -40,7 +42,7 @@ namespace myTeams
             ~Client();
 
             bool displayHelp(int argc, char *argv[]) const;
-            void initClient(const std::string &ip, u_int16_t port);
+            void initClient(const std::string &ip, uint16_t port);
             void run();
     };
 }

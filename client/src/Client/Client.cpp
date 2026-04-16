@@ -46,7 +46,7 @@ bool myTeams::Client::connectToServer()
     return true;
 }
 
-void myTeams::Client::initClient(const std::string &ip, u_int16_t port)
+void myTeams::Client::initClient(const std::string &ip, uint16_t port)
 {
     _ip = ip;
     _port = port;
