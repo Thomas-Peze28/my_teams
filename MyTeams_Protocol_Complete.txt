@@ -39,196 +39,153 @@ The following are the FTP commands from client to server:
                - When team_uuid, channel_uuid and thread_uuid are defined (/use "team_uuid" "channel_uuid" "thread_uuid"): /info : display currently selected thread details
 
 
-Command-Reply Sequences (Mandatory part)
+Command-Reply Sequences:
 
-The server reply is defined to contain the 3-digit code, followed by Space <SP>, followed by one line of text, and terminated by the Telnet end-of-line code <CRLF>.
+The server reply is defined to contain the 3-digit code, followed by Space <SP>, followed by a Keyword identifying the action, and terminated by the Telnet end-of-line code <CRLF>.
 
-Format:
-<- CODE <SP> RESPONSE_DATA <CRLF>
--> : Request command from client to server
-<- : Reply from server to client
-
-Code Categories:
-- 001-099: General/Connection responses
-- 100-199: User management (login, logout, users, user)
-- 200-299: Message management (send, messages)
-- 300-399: Subscription management (subscribe, unsubscribe, subscribed)
-- 400-499: Team management (create, list, info teams)
-- 500-599: Channel management (create, list, info channels)
-- 600-699: Thread management (create, list, info threads)
-- 700-799: Reply management (create, list, info replies)
-- 800-899: Context management (use)
-- 900-998: Events and errors
-- 000 & 999: List management (end and start)
-
+Format: <- CODE <SP> KEYWORD <SP> ["ARGS"...] <CRLF>
 
 Connection Establishment & Help
             Connection Establishment ->
                <- 001 Welcome to MyTeams!
-
             /help ->
                <- 002 *help menu*
 
 
-User Management (100-199)
+User Management
             /login ["user_name"] ->
-               <- 100 LOGIN 'uuid' 'user_name'
-               <- 900 ALREADY_EXIST (error: user already logged in)
-               <- 901 UNAUTHORIZED (error: duplicate username)
+               <- 100 LOGIN "user_uuid" "user_name"
+               <- 501 ALREADY_EXIST (error: user already logged in / duplicate name)
 
             /logout ->
-               <- 101 LOGOUT 'uuid' 'user_name'
-               <- 902 UNAUTHORIZED (error: not logged in)
+               <- 100 LOGOUT "user_uuid" "user_name"
+               <- 502 UNAUTHORIZED (error: not logged in)
 
             /users ->
                <- 000 LIST_START
-               <- 103 USERS 'uuid' 'user_name' 'status'
-               <- 103 USERS 'uuid' 'user_name' 'status'
+               <- 100 USER_DATA "uuid" "user_name" "status"
                <- 999 LIST_END
-               <- 903 UNKNOWN_USER (error: no users in list)
 
             /user ["user_uuid"] ->
-               <- 105 USER 'uuid' 'user_name' 'status'
-               <- 904 UNKNOWN_USER_UUID 'user_uuid' (error: user not found)
+               <- 100 USER_DATA "uuid" "user_name" "status"
+               <- 500 UNKNOWN_USER "user_uuid"
 
-
-Message Management (200-299)
+Message Management
             /send ["user_uuid"] ["message_body"] ->
-               <- 200 SEND_OK
-               <- 905 UNKNOWN_USER_UUID 'user_uuid' (error: recipient not found)
-               <- 906 UNAUTHORIZED (error: message sending failed)
+               <- 100 SEND_OK
+               <- 500 UNKNOWN_USER "user_uuid"
+               <- 502 UNAUTHORIZED (error: message sending failed)
 
             /messages ["user_uuid"] ->
                <- 000 LIST_START
-               <- 201 MSGS 'sender_uuid' 'timestamp' 'body'
-               <- 201 MSGS 'sender_uuid' 'timestamp' 'body'
+               <- 100 MSG_DATA "sender_uuid" "timestamp" "body"
                <- 999 LIST_END
-               <- 907 UNKNOWN_USER_UUID 'user_uuid' (error: no messages)
-               <- 908 UNAUTHORIZED (error: message retrieval failed)
+               <- 500 UNKNOWN_USER "user_uuid"
 
 
-Subscription Management (300-399)
+Subscription Management
             /subscribe ["team_uuid"] ->
-               <- 300 SUB_OK 'user_uuid' 'team_uuid'
-               <- 909 UNKNOWN_TEAM_UUID 'team_uuid' (error: team not found)
+               <- 100 SUB_OK "user_uuid" "team_uuid"
+               <- 500 UNKNOWN_TEAM "team_uuid"
 
             /unsubscribe ["team_uuid"] ->
-               <- 301 UNSUB_OK 'user_uuid' 'team_uuid'
-               <- 910 UNKNOWN_TEAM_UUID 'team_uuid' (error: team not found)
+               <- 100 UNSUB_OK "user_uuid" "team_uuid"
+               <- 500 UNKNOWN_TEAM "team_uuid"
 
             /subscribed ->
                <- 000 LIST_START
-               <- 302 SUB_TEAMS 'uuid' 'team_name' 'description'
-               <- 302 SUB_TEAMS 'uuid' 'team_name' 'description'
+               <- 100 SUB_TEAMS "uuid" "team_name" "description"
                <- 999 LIST_END
 
             /subscribed ["team_uuid"] ->
                <- 000 LIST_START
-               <- 303 SUB_USERS 'uuid' 'user_name' 'status'
-               <- 303 SUB_USERS 'uuid' 'user_name' 'status'
+               <- 100 SUB_USERS "uuid" "user_name" "status"
                <- 999 LIST_END
-               <- 911 UNKNOWN_TEAM_UUID 'team_uuid' (error: team not found)
+               <- 500 UNKNOWN_TEAM "team_uuid"
 
 
-Context Management (800-899)
+Context Management
             /use ?["team_uuid"] ?["channel_uuid"] ?["thread_uuid"] ->
                <- 800 CONTEXT_SET
 
 
-Team Management (400-499)
-            /create ["team_name"] ["team_description"] (when context is empty) ->
-               <- 400 TEAM_CREATED 'uuid' 'team_name' 'description'
-               <- 900 ALREADY_EXIST (error: team already exists)
+Team Management (No Context)
+            /create ["team_name"] ["team_description"] ->
+               <- 200 TEAM_CREATED "uuid" "team_name" "description"
+               <- 501 ALREADY_EXIST
 
-            /list (when context is empty - list all teams) ->
+            /list ->
                <- 000 LIST_START
-               <- 401 TEAM 'uuid' 'team_name' 'description'
-               <- 401 TEAM 'uuid' 'team_name' 'description'
+               <- 400 LIST_TEAM "uuid" "team_name" "description"
                <- 999 LIST_END
 
-            /info (when context is empty - current user info) ->
-               <- 402 USER_INFO 'user_uuid' 'user_name' 'status'
+            /info ->
+               <- 300 USER_INFO "user_uuid" "user_name" "status"
 
 
-Channel Management (500-599)
-            /create ["channel_name"] ["channel_description"] (when team_uuid is set) ->
-               <- 500 CHANNEL_CREATED 'uuid' 'channel_name' 'description'
-               <- 909 UNKNOWN_TEAM_UUID 'team_uuid' (error: team not found)
-               <- 901 ALREADY_EXIST (error: channel already exists)
+Channel Management (Team Context)
+            /create ["channel_name"] ["channel_description"] ->
+               <- 200 CHANNEL_CREATED "uuid" "channel_name" "description"
+               <- 500 UNKNOWN_TEAM "team_uuid"
+               <- 501 ALREADY_EXIST
 
-            /list (when team_uuid is set - list all channels) ->
+            /list ->
                <- 000 LIST_START
-               <- 501 CHANNEL 'uuid' 'channel_name' 'description'
-               <- 501 CHANNEL 'uuid' 'channel_name' 'description'
+               <- 400 LIST_CHANNEL "uuid" "channel_name" "description"
                <- 999 LIST_END
-               <- 911 UNKNOWN_TEAM_UUID 'team_uuid' (error: team not found)
+               <- 500 UNKNOWN_TEAM "team_uuid"
 
-            /info (when team_uuid is set - team info) ->
-               <- 502 TEAM_INFO 'team_uuid' 'team_name' 'description'
-               <- 912 UNKNOWN_TEAM_UUID 'team_uuid' (error: team not found)
+            /info ->
+               <- 300 TEAM_INFO "team_uuid" "team_name" "description"
+               <- 500 UNKNOWN_TEAM "team_uuid"
 
 
-Thread Management (600-699)
-            /create ["thread_title"] ["thread_body"] (when team_uuid and channel_uuid are set) ->
-               <- 600 THREAD_CREATED 'thread_uuid' 'user_uuid' 'timestamp' 'title' 'body'
-               <- 913 UNKNOWN_CHANNEL_UUID 'channel_uuid' (error: channel not found)
+Thread Management (Channel Context)
+            /create ["thread_title"] ["thread_body"] ->
+               <- 200 THREAD_CREATED "thread_uuid" "user_uuid" "timestamp" "title" "body"
+               <- 500 UNKNOWN_CHANNEL "channel_uuid"
 
-            /list (when team_uuid and channel_uuid are set - list all threads) ->
+            /list ->
                <- 000 LIST_START
-               <- 601 THREAD 'uuid' 'user_uuid' 'timestamp' 'title' 'body'
-               <- 601 THREAD 'uuid' 'user_uuid' 'timestamp' 'title' 'body'
+               <- 400 LIST_THREAD "uuid" "user_uuid" "timestamp" "title" "body"
                <- 999 LIST_END
-               <- 914 UNKNOWN_CHANNEL_UUID 'channel_uuid' (error: channel not found)
+               <- 500 UNKNOWN_CHANNEL "channel_uuid"
 
-            /info (when team_uuid and channel_uuid are set - channel info) ->
-               <- 602 CHANNEL_INFO 'channel_uuid' 'channel_name' 'description'
-               <- 915 UNKNOWN_CHANNEL_UUID 'channel_uuid' (error: channel not found)
+            /info ->
+               <- 300 CHANNEL_INFO "channel_uuid" "channel_name" "description"
+               <- 500 UNKNOWN_CHANNEL "channel_uuid"
 
 
-Reply Management (700-799)
-            /create ["reply_body"] (when team_uuid, channel_uuid, and thread_uuid are set) ->
-               <- 700 REPLY_CREATED 'thread_uuid' 'user_uuid' 'timestamp' 'body'
-               <- 916 UNKNOWN_THREAD_UUID 'thread_uuid' (error: thread not found)
+Reply Management (Thread Context)
+            /create ["reply_body"] ->
+               <- 200 REPLY_CREATED "thread_uuid" "user_uuid" "timestamp" "body"
+               <- 500 UNKNOWN_THREAD "thread_uuid"
 
-            /list (when team_uuid, channel_uuid, and thread_uuid are set - list all replies) ->
+            /list ->
                <- 000 LIST_START
-               <- 701 REPLY 'uuid' 'user_uuid' 'timestamp' 'body'
-               <- 701 REPLY 'uuid' 'user_uuid' 'timestamp' 'body'
+               <- 400 LIST_REPLY "uuid" "user_uuid" "timestamp" "body"
                <- 999 LIST_END
-               <- 917 UNKNOWN_THREAD_UUID 'thread_uuid' (error: thread not found)
+               <- 500 UNKNOWN_THREAD "thread_uuid"
 
-            /info (when team_uuid, channel_uuid, and thread_uuid are set - thread info) ->
-               <- 702 THREAD_INFO 'thread_uuid' 'user_uuid' 'timestamp' 'title' 'body'
-               <- 918 UNKNOWN_THREAD_UUID 'thread_uuid' (error: thread not found)
-
-
-Event Notifications (900-999)
-            <- 950 USER_LOGGED_IN 'user_uuid' 'user_name'
-            <- 951 USER_LOGGED_OUT 'user_uuid' 'user_name'
-            <- 952 PRIVATE_MESSAGE_RECEIVED 'sender_uuid' 'message_body'
-            <- 953 TEAM_CREATED 'team_uuid' 'team_name' 'description'
-            <- 954 CHANNEL_CREATED 'channel_uuid' 'channel_name' 'description'
-            <- 955 THREAD_CREATED 'thread_uuid' 'user_uuid' 'timestamp' 'title' 'body'
-            <- 956 REPLY_CREATED 'thread_uuid' 'user_uuid' 'timestamp' 'body'
+            /info ->
+               <- 300 REPLY_INFO "thread_uuid" "user_uuid" "timestamp" "body"
+               <- 500 UNKNOWN_THREAD "thread_uuid"
 
 
-Error Code Reference (900-999)
-            900: ALREADY_EXIST (user already logged in / team/channel already exists)
-            901: UNAUTHORIZED (duplicate username / channel already exists)
-            902: UNAUTHORIZED (logout error / not logged in)
-            903: UNKNOWN_USER (no users in list)
-            904: UNKNOWN_USER_UUID 'user_uuid' (user not found)
-            905: UNKNOWN_USER_UUID 'user_uuid' (recipient not found)
-            906: UNAUTHORIZED (message sending failed)
-            907: UNKNOWN_USER_UUID 'user_uuid' (no messages)
-            908: UNAUTHORIZED (message retrieval failed)
-            909: UNKNOWN_TEAM_UUID 'team_uuid' (team not found)
-            910: UNKNOWN_TEAM_UUID 'team_uuid' (team not found for unsubscribe)
-            911: UNKNOWN_TEAM_UUID 'team_uuid' (team not found for channel list)
-            912: UNKNOWN_TEAM_UUID 'team_uuid' (team not found for info)
-            913: UNKNOWN_CHANNEL_UUID 'channel_uuid' (channel not found)
-            914: UNKNOWN_CHANNEL_UUID 'channel_uuid' (channel not found for thread list)
-            915: UNKNOWN_CHANNEL_UUID 'channel_uuid' (channel not found for info)
-            916: UNKNOWN_THREAD_UUID 'thread_uuid' (thread not found)
-            917: UNKNOWN_THREAD_UUID 'thread_uuid' (thread not found for reply list)
-            918: UNKNOWN_THREAD_UUID 'thread_uuid' (thread not found for info)
+Event Notifications
+            <- 600 EVT_LOGGED_IN "user_uuid" "user_name"
+            <- 600 EVT_LOGGED_OUT "user_uuid" "user_name"
+            <- 600 EVT_MSG_RECEIVED "sender_uuid" "message_body"
+            <- 600 EVT_TEAM_CREATED "team_uuid" "team_name" "description"
+            <- 600 EVT_CHAN_CREATED "channel_uuid" "channel_name" "description"
+            <- 600 EVT_THREAD_CREATED "thread_uuid" "user_uuid" "timestamp" "title" "body"
+            <- 600 EVT_REPLY_CREATED "team_uuid" "thread_uuid" "user_uuid" "body"
+
+
+Error Code Reference
+            500: UNKNOWN_USER "user_uuid"      (user or recipient not found)
+            500: UNKNOWN_TEAM "team_uuid"      (team not found)
+            500: UNKNOWN_CHANNEL "channel_uuid" (channel not found)
+            500: UNKNOWN_THREAD "thread_uuid"   (thread not found)
+            501: ALREADY_EXIST                 (already logged in / resource already exists)
+            502: UNAUTHORIZED                  (not logged in / permission required)
