@@ -6,11 +6,8 @@
 */
 
 #include "Parser.hpp"
-#include <unordered_map>
-#include <climits>
 
-myTeams::Parser::Parser(Command& command, std::map<int, std::unique_ptr<Client>>& online_clients)
-: _command(command),  _online_clients(online_clients)
+myTeams::Parser::Parser(Command &command) : _command(command)
 {
 }
 
@@ -28,10 +25,10 @@ bool myTeams::Parser::isClientDisconnected(int client_socket) const
     return false;
 }
 
-void myTeams::Parser::handleCommand(int client_socket) const
+void myTeams::Parser::handleCommand(Client& client) const
 {
     char buffer[BUFFER_SIZE] = {0};
-    ssize_t bytes_read = recv(client_socket, buffer, sizeof(buffer) - 1, 0);
+    ssize_t bytes_read = recv(client.getSocket(), buffer, sizeof(buffer) - 1, 0);
 
     if (bytes_read <= 0)
         return;
@@ -40,18 +37,20 @@ void myTeams::Parser::handleCommand(int client_socket) const
 
     CommandData cmd;
     std::istringstream stream(buffer);
+    std::string arg;
 
     stream >> cmd.name;
-    while (stream >> cmd.args.emplace_back());
-    cmd.args.pop_back();
+    while (stream >> arg)
+        cmd.args.push_back(arg);
     cmd.nb_args = cmd.args.size();
 
-    executeCommand(cmd, client_socket);
+    executeCommand(client, cmd);
 }
 
-void myTeams::Parser::executeCommand(CommandData& cmd, int client_socket) const
+void myTeams::Parser::executeCommand(Client& client, const CommandData& cmd) const
 {
-    using CommandHandler = void (Command::*)(CommandData&, int) const;
+    using CommandHandler = void (Command::*)(Client&, CommandData) const;
+
     struct CommandSpec {
         CommandHandler handler;
         bool requires_auth;
@@ -65,34 +64,24 @@ void myTeams::Parser::executeCommand(CommandData& cmd, int client_socket) const
         {"/logout", {&Command::logout, true, 0, 0}},
         {"/users", {&Command::users, true, 0, 0}},
         {"/user", {&Command::user, true, 1, 1}},
-        {"/send", {&Command::send, true, 2, 2}},
-        {"/messages", {&Command::messages, true, 1, 1}},
+        {"/use", {&Command::use, true, 1, 1}},
         {"/subscribe", {&Command::subscribe, true, 1, 1}},
-        {"/subscribed", {&Command::subscribed, true, 1, 1}},
         {"/unsubscribe", {&Command::unsubscribe, true, 1, 1}},
-        {"/use", {&Command::use, true, 1, 3}},
-        {"/create", {&Command::create, true, 1, 2}},
-        {"/list", {&Command::list, true, 0, 0}},
-        {"/info", {&Command::info, true, 0, 0}},
+        {"/subscribed", {&Command::subscribed, true, 0, 1}}
     };
 
-    auto client_it = _online_clients.find(client_socket);
-    auto it = handlers.find(cmd.name);
-
+    const auto it = handlers.find(cmd.name);
     if (it == handlers.end()) {
-        dprintf(client_socket, "919 UNKNOW COMMAND: %s\n", cmd.name.c_str());
+        dprintf(client.getSocket(), "919 UNKNOWN COMMAND: %s\n", cmd.name.c_str());
         return;
     }
-    if (client_it == _online_clients.end() || client_it->second == nullptr)
-        return;
-    bool is_authenticated = client_it->second->isAuthenticated();
-    if (!is_authenticated && it->second.requires_auth) {
-        dprintf(client_socket, "902 UNAUTHORIZED (error: not logged in)\n");
+    if (it->second.requires_auth && !client.getAuth()) {
+        dprintf(client.getSocket(), "401 UNAUTHORIZED : you must be logged in to use this command\n");
         return;
     }
     if (cmd.nb_args < it->second.min_args || cmd.nb_args > it->second.max_args) {
-        dprintf(client_socket, "920 INVALID NUMBERS OF ARGUMENTS FOR COMMAND: %s\n", cmd.name.c_str());
+        dprintf(client.getSocket(), "400 BAD REQUEST : wrong number of arguments for command %s\n", cmd.name.c_str());
         return;
     }
-    (_command.*(it->second.handler))(cmd, client_socket);
+    (_command.*(it->second.handler))(client, cmd);
 }

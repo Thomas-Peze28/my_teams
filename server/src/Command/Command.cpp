@@ -7,181 +7,188 @@
 
 #include "Command.hpp"
 
-myTeams::Command::Command(Hub &hub, std::map<int, std::unique_ptr<Client>>& online_clients, std::map<std::string, std::string>& all_clients)
-: _hub(hub), _online_clients(online_clients), _all_clients(all_clients)
+std::string myTeams::Command::generateUuid() const
 {
+    uuid_t uuid;
+    char uuid_str[37];
+
+    uuid_generate(uuid);
+    uuid_unparse(uuid, uuid_str);
+    return std::string(uuid_str);
 }
 
-void myTeams::Command::help(__attribute_maybe_unused__ CommandData& cmd, int client_socket) const
+std::string myTeams::Command::_getUuidFromPseudo(const std::string pseudo) const
 {
-    dprintf(client_socket, "Available commands:\n");
-    dprintf(client_socket, "/help : show help\n");
-    dprintf(client_socket, "/login [”user_name”] : set the user_name used by client\n");
-    dprintf(client_socket, "/logout : disconnect the client from the server\n");
-    dprintf(client_socket, "/users : get the list of all users that exist on the domain\n");
-    dprintf(client_socket, "/user [”user_uuid”] : get details about the requested user\n");
-    dprintf(client_socket, "/send [”user_uuid”] [”message_body”] : send a message to specific user\n");
-    dprintf(client_socket, "/messages [”user_uuid”] : list all messages exchanged with the specified user\n");
-    dprintf(client_socket, "/subscribe [”team_uuid”] : subscribe to the events of a team and its sub directories (enable reception of all events from a team)\n");
-    dprintf(client_socket, "/subscribed ?[”team_uuid”] : list all subscribed teams or list all users subscribed to a team\n");
-    dprintf(client_socket, "/unsubscribe [”team_uuid”] : unsubscribe from a team\n");
-    dprintf(client_socket, "/use ?[”team_uuid”] ?[”channel_uuid”] ?[”thread_uuid”] : Sets the command context to a team/channel/thread\n");
-    dprintf(client_socket, "/create : based on the context, create the sub resource (see below)\n");
-    dprintf(client_socket, "/list : based on the context, list all the sub resources (see below)\n");
-    dprintf(client_socket, "/info : based on the context, display details of the current resource (see below)\n");
-}
-
-void myTeams::Command::login(CommandData& cmd, int client_socket) const
-{
-    const std::string user_pseudo = cmd.args[0];
-    if (user_pseudo.empty())
-        return;
-    for (const auto& [socket, client] : _online_clients)
-        if (client && client->getClientPseudo() == user_pseudo) {
-            dprintf(client_socket, "900 ALREADY_EXIST\n");
-            return;
-        }
-    auto it = _all_clients.find(user_pseudo);
-    if (it == _all_clients.end()) {
-        uuid_t uu;
-        char uuid_str[37];
-        uuid_generate(uu);
-        uuid_unparse_lower(uu, uuid_str);
-        _all_clients[user_pseudo] = std::string(uuid_str);
-        server_event_user_created((std::string(uuid_str)).c_str(), user_pseudo.c_str());
-        it = _all_clients.find(user_pseudo);
+    for (const auto& pair : _all_clients) {
+        if (pair.second == pseudo)
+            return pair.first;
     }
-    const std::string& user_uuid = it->second;
-    _online_clients[client_socket]->setClientUuid(user_uuid);
-    _online_clients[client_socket]->setClientPseudo(user_pseudo);
-    _online_clients[client_socket]->setClientAuth(true);
-    dprintf(client_socket, "100 LOGIN '%s' '%s'\n", user_uuid.c_str(), user_pseudo.c_str());
-    server_event_user_logged_in(user_uuid.c_str());
+    return "";
 }
 
-void myTeams::Command::logout(__attribute_maybe_unused__ CommandData& cmd, int client_socket) const
+std::unique_ptr<myTeams::Client> myTeams::Command::_getClientFromPseudo(const std::string pseudo) const
 {
-    std::string client_uuid = _online_clients[client_socket]->getUuid();
-    std::string client_pseudo = _online_clients[client_socket]->getClientPseudo();
-
-    _online_clients[client_socket]->setClientPseudo("");
-    _online_clients[client_socket]->setClientUuid("");
-    _online_clients[client_socket]->setClientAuth(false);
-    server_event_user_logged_out(client_uuid.c_str());
-    dprintf(client_socket, "101 LOGOUT '%s' '%s'\n", client_pseudo.c_str(), client_uuid.c_str());
+    for (const auto& pair : _online_clients) {
+        if (pair.second->getPseudo() == pseudo)
+            return std::make_unique<Client>(*pair.second);
+    }
+    return nullptr;
 }
 
-void myTeams::Command::users(__attribute_maybe_unused__ CommandData& cmd, int client_socket) const
+void myTeams::Command::help(Client &client, __attribute_maybe_unused__ CommandData data) const
 {
-    dprintf(client_socket, "000 LIST_START\n");
-    for (const auto& [pseudo, uuid] : _all_clients) {
-        bool status = false;
-        for (const auto& [socket, client] : _online_clients) {
-            if (client && client->getUuid() == uuid) {
-                status = true;
-                break;
+    dprintf(client.getSocket(), "Available commands:\n");
+    dprintf(client.getSocket(), "/help : show help\n");
+    dprintf(client.getSocket(), "/login [”user_name”] : set the user_name used by client\n");
+    dprintf(client.getSocket(), "/logout : disconnect the client from the server\n");
+    dprintf(client.getSocket(), "/users : get the list of all users that exist on the domain\n");
+    dprintf(client.getSocket(), "/user [”user_uuid”] : get details about the requested user\n");
+    dprintf(client.getSocket(), "/send [”user_uuid”] [”message_body”] : send a message to specific user\n");
+    dprintf(client.getSocket(), "/messages [”user_uuid”] : list all messages exchanged with the specified user\n");
+    dprintf(client.getSocket(), "/subscribe [”team_uuid”] : subscribe to the events of a team and its sub directories (enable reception of all events from a team)\n");
+    dprintf(client.getSocket(), "/subscribed ?[”team_uuid”] : list all subscribed teams or list all users subscribed to a team\n");
+    dprintf(client.getSocket(), "/unsubscribe [”team_uuid”] : unsubscribe from a team\n");
+    dprintf(client.getSocket(), "/use ?[”team_uuid”] ?[”channel_uuid”] ?[”thread_uuid”] : Sets the command context to a team/channel/thread\n");
+    dprintf(client.getSocket(), "/create : based on the context, create the sub resource (see below)\n");
+    dprintf(client.getSocket(), "/list : based on the context, list all the sub resources (see below)\n");
+    dprintf(client.getSocket(), "/info : based on the context, display details of the current resource (see below)\n");
+}
+
+void myTeams::Command::login(Client &client, CommandData data) const
+{
+    if (client.getAuth()) {
+        dprintf(client.getSocket(), "400 BAD REQUEST : ou are already logged in as %s\n", client.getPseudo().c_str());
+        return;
+    }
+    if (_getClientFromPseudo(data.args[0]) != nullptr) {
+        dprintf(client.getSocket(), "400 BAD REQUEST : pseudo %s is already taken\n", data.args[0].c_str());
+        return;
+    }
+    if (!_getUuidFromPseudo(data.args[0]).empty()) {
+        client.setUuid(_getUuidFromPseudo(data.args[0]));
+        client.setPseudo(data.args[0]);
+        client.setAuth(true);
+    } else {
+        client.setUuid(generateUuid());
+        client.setPseudo(data.args[0]);
+        client.setAuth(true);
+        _all_clients[client.getUuid()] = client.getPseudo();
+        server_event_user_created((std::string(client.getUuid())).c_str(), client.getPseudo().c_str());
+    }
+    dprintf(client.getSocket(), "100 LOGIN '%s' '%s'\n", client.getUuid().c_str(), client.getPseudo().c_str());
+    server_event_user_logged_in(client.getUuid().c_str());
+}
+
+void myTeams::Command::logout(Client &client, __attribute_maybe_unused__ CommandData data) const
+{
+    dprintf(client.getSocket(), "101 LOGOUT '%s' '%s'\n", client.getPseudo().c_str(), client.getUuid().c_str());
+    server_event_user_logged_out(client.getUuid().c_str());
+    client.setAuth(false);
+    client.setPseudo("");
+    client.setUuid("");
+}
+
+void myTeams::Command::users(Client &client, __attribute_maybe_unused__ CommandData data) const
+{
+    for (unsigned int i = 0; i < _all_clients.size(); i++) {
+        bool is_online = false;
+        is_online = _getClientFromPseudo(std::next(_all_clients.begin(), i)->second) != nullptr;
+        dprintf(client.getSocket(), "103 USERS '%s' '%s' '%d'\n", std::next(_all_clients.begin(), i)->first.c_str(), std::next(_all_clients.begin(), i)->second.c_str(), is_online ? 1 : 0);
+    }
+}
+
+void myTeams::Command::user(Client &client, CommandData data) const
+{
+    std::string uuid = data.args[0];
+    std::string pseudo = _all_clients.find(uuid)->second;
+    if (pseudo.empty()) {
+        dprintf(client.getSocket(), "404 NOT FOUND : no user with uuid %s\n", uuid.c_str());
+        return;
+    }
+    bool is_online = _getClientFromPseudo(pseudo) != nullptr;
+    dprintf(client.getSocket(), "103 USERS '%s' '%s' '%d'\n", uuid.c_str(), pseudo.c_str(), is_online ? 1 : 0);
+}
+
+void myTeams::Command::use(Client &client, CommandData data) const
+{
+    std::string team_uuid = !data.args[0].empty() ? data.args[0] : "";
+    std::string channel_uuid = !data.args[1].empty() ? data.args[1] : "";
+    std::string thread_uuid = !data.args[2].empty() ? data.args[2] : "";
+
+    if (_hub.getTeam(team_uuid) == nullptr) {
+        dprintf(client.getSocket(), "404 NOT FOUND : no team with uuid %s\n", team_uuid.c_str());
+        return;
+    } else if (_hub.getTeam(team_uuid)->isMember(client.getUuid()) == false) {
+        dprintf(client.getSocket(), "403 FORBIDDEN : you are not a member of the team with uuid %s\n", team_uuid.c_str());
+        return;
+    } else if (!channel_uuid.empty() && _hub.getTeam(team_uuid)->getChannel(channel_uuid) == nullptr) {
+        dprintf(client.getSocket(), "404 NOT FOUND : no channel with uuid %s\n", channel_uuid.c_str());
+        return;
+    } else if (!thread_uuid.empty() && _hub.getTeam(team_uuid)->getChannel(channel_uuid)->getThread(thread_uuid) == nullptr) {
+        dprintf(client.getSocket(), "404 NOT FOUND : no thread with uuid %s\n", thread_uuid.c_str());
+        return;
+    }
+    client.setCurrentTeam(team_uuid);
+    client.setCurrentChannel(channel_uuid);
+    client.setCurrentThread(thread_uuid);
+    dprintf(client.getSocket(), "800 CONTEXT_SET\n");
+}
+
+void myTeams::Command::subscribe(Client &client, CommandData data) const
+{
+    std::string team_uuid = data.args[0];
+
+    if (_hub.getTeam(team_uuid) == nullptr) {
+        dprintf(client.getSocket(), "404 NOT FOUND : no team with uuid %s\n", team_uuid.c_str());
+        return;
+    } else if (_hub.getTeam(team_uuid)->isMember(client.getUuid()) == true) {
+        dprintf(client.getSocket(), "400 BAD REQUEST : you are already a member of the team with uuid %s\n", team_uuid.c_str());
+        return;
+    }
+    _hub.getTeam(team_uuid)->addMember(client.getUuid());
+    dprintf(client.getSocket(), "300 SUB_OK '%s' '%s'\n", client.getUuid().c_str(), team_uuid.c_str());
+    server_event_user_subscribed(team_uuid.c_str(), client.getUuid().c_str());
+}
+
+void myTeams::Command::unsubscribe(Client &client, CommandData data) const
+{
+    std::string team_uuid = data.args[0];
+
+    if (_hub.getTeam(team_uuid) == nullptr) {
+        dprintf(client.getSocket(), "404 NOT FOUND : no team with uuid %s\n", team_uuid.c_str());
+        return;
+    } else if (_hub.getTeam(team_uuid)->isMember(client.getUuid()) == false) {
+        dprintf(client.getSocket(), "400 BAD REQUEST : you are not a member of the team with uuid %s\n", team_uuid.c_str());
+        return;
+    }
+    _hub.getTeam(team_uuid)->removeMember(client.getUuid());
+    dprintf(client.getSocket(), "301 UNSUB_OK '%s' '%s'\n", client.getUuid().c_str(), team_uuid.c_str());
+    server_event_user_unsubscribed(team_uuid.c_str(), client.getUuid().c_str());
+}
+
+void myTeams::Command::subscribed(Client &client, CommandData data) const
+{
+    if (data.args.empty()) {
+        dprintf(client.getSocket(), "000 LIST_START\n");
+        for (const auto& team : _hub.getTeams()) {
+            if (team.second && team.second->isMember(client.getUuid())) {
+                dprintf(client.getSocket(), "302 SUB_TEAMS '%s' '%s' '%s'\n", team.second->getUuid().c_str(), team.second->getName().c_str(), team.second->getDescription().c_str());
             }
         }
-        dprintf(client_socket, "103 USERS '%s' '%s' '%d'\n", uuid.c_str(), pseudo.c_str(), status ? 1 : 0);
-    }
-    dprintf(client_socket, "999 LIST_END\n");
-}
-
-void myTeams::Command::user(CommandData& cmd, int client_socket) const
-{
-    std::string user_uuid = cmd.args[0];
-
-    for (const auto& [pseudo, uuid] : _all_clients) {
-        if (uuid == user_uuid) {
-            bool status = false;
-            for (const auto& [socket, client] : _online_clients) {
-                if (client && client->getUuid() == uuid) {
-                    status = true;
-                    break;
-                }
-            }
-            dprintf(client_socket, "105 USER '%s' '%s' '%d'\n", uuid.c_str(), pseudo.c_str(), status ? 1 : 0);
+        dprintf(client.getSocket(), "999 LIST_END\n");
+    } else {
+        std::string team_uuid = data.args[0];
+        auto *team = _hub.getTeam(team_uuid);
+        if (team == nullptr) {
+            dprintf(client.getSocket(), "911 UNKNOWN_TEAM_UUID '%s'\n", team_uuid.c_str());
             return;
         }
+        for (const auto& member_uuid : team->getMembers()) {
+            const auto user = _all_clients.find(member_uuid);
+            const std::string user_name = user != _all_clients.end() ? user->second : "";
+            const int status = _getClientFromPseudo(user_name) != nullptr ? 1 : 0;
+
+            dprintf(client.getSocket(), "303 SUB_USERS '%s' '%s' '%d'\n", member_uuid.c_str(), user_name.c_str(), status);
+        }
     }
-    dprintf(client_socket, "904 UNKNOWN_USER_UUID '%s' (error: user not found)\n", user_uuid.c_str());
-}
-
-void myTeams::Command::use(CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::string arg1 = cmd.args[0];
-    std::string arg2 = cmd.args.size() > 1 ? cmd.args[1] : "";
-    std::string arg3 = cmd.args.size() > 2 ? cmd.args[2] : "";
-
-    if (_hub.getTeam(arg1) == nullptr) {
-        dprintf(client_socket, "909 UNKNOWN_TEAM_UUID '%s' (error: team not found)\n", arg1.c_str());
-        return;
-    } else if (_hub.getTeam(arg1)->isAvailableClient(_online_clients[client_socket]->getUuid()) == false) {
-        dprintf(client_socket, "908 CLIENT_NOT_IN_TEAM '%s' (error: client is not in the specified team)\n", _online_clients[client_socket]->getUuid().c_str());
-        return;
-    } else if (!arg2.empty() && _hub.getTeam(arg1)->getChannel(arg2) == nullptr) {
-        dprintf(client_socket, "905 UNKNOWN_CHANNEL_UUID '%s' (error: channel not found)\n", arg2.c_str());
-        return;
-    } else if (!arg3.empty() && _hub.getTeam(arg1)->getChannel(arg2)->getThread(arg3) == nullptr) {
-        dprintf(client_socket, "906 UNKNOWN_THREAD_UUID '%s' (error: thread not found)\n", arg3.c_str());
-        return;
-    }
-    _online_clients[client_socket]->setCurrentTeam(arg1);
-    _online_clients[client_socket]->setCurrentChannel(arg2);
-    _online_clients[client_socket]->setCurrentThread(arg3);
-    dprintf(client_socket, "800 CONTEXT_SET\n");
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-void myTeams::Command::send(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "Send command executed." << std::endl;
-}
-
-void myTeams::Command::messages(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "Messages command executed." << std::endl;
-}
-
-void myTeams::Command::subscribe(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "Subscribe command executed." << std::endl;
-}
-
-void myTeams::Command::subscribed(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "Subscribed command executed." << std::endl;
-}
-
-void myTeams::Command::unsubscribe(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "Unsubscribe command executed." << std::endl;
-}
-
-void myTeams::Command::create(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "Create command executed." << std::endl;
-}
-
-void myTeams::Command::list(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "List command executed." << std::endl;
-}
-
-void myTeams::Command::info(__attribute_maybe_unused__ CommandData& cmd, __attribute_maybe_unused__ int client_socket) const
-{
-    std::cout << "Info command executed." << std::endl;
 }

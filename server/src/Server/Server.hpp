@@ -13,10 +13,10 @@
     #include <map>
 
     #include "Client.hpp"
+    #include "Hub.hpp"
     #include "PollFD.hpp"
     #include "NetworkServer.hpp"
     #include "Parser.hpp"
-    #include "Hub.hpp"
     #include "Command.hpp"
 
     extern "C" {
@@ -30,29 +30,38 @@ namespace myTeams
     class Server
     {
         private:
+            /*
+                Proprieties Network
+            */
             PollFD _poll_fds = {};
             unsigned int _nb_clients = 0;
             NetworkServer _network_server;
-            Hub _hub = {};
+            static bool _is_running;
+            static void signalHandler(int signal);
+
+            /*
+                Proprieties Clients
+            */
+            std::map<int, std::unique_ptr<Client>> _online_clients = {};
+            std::map<std::string, std::string> _all_clients = {};
+
+            /*
+                Proprieties Application
+            */
+            Hub _hub;
             Command _command;
             Parser _parser;
 
-            // 2 CLIENT [Sojourner, A23DNKDzo0...]
-            std::map<int, std::unique_ptr<Client>> _online_clients = {};
-
-            // Sojourner A23DNKDzo0...
-            std::map<std::string, std::string> _all_clients = {};
-
-            static bool _is_running;
-            static void signalHandler(int signal);
+            void disconnectClient(int client_socket);
 
         public:
             Server();
             ~Server() = default;
 
-            void runServer();
-            void initServer(uint16_t port) { _network_server.initNetworkServer(port); }
-            void disconnectClient(int client_socket);
             bool displayHelp(int argc, char *argv[]) const;
+            
+            void initServer(uint16_t port);
+
+            void runServer();
     };
 }

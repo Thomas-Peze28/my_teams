@@ -1,6 +1,7 @@
 *.a
 *.o
 *.out
+*.sh
 myteams_server
 myteams_cli
 *.pdf

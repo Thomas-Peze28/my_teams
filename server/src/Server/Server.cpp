@@ -7,11 +7,12 @@
 
 #include "Server.hpp"
 
-bool myTeams::Server::_is_running = false;
-
-myTeams::Server::Server() : _network_server(_poll_fds, _nb_clients), _command(_hub, _online_clients, _all_clients), _parser(_command, _online_clients)
+myTeams::Server::Server()
+    : _network_server(_poll_fds, _nb_clients), _command(_online_clients, _all_clients, _hub), _parser(_command)
 {
 }
+
+bool myTeams::Server::_is_running = false;
 
 bool myTeams::Server::displayHelp(int argc, char *argv[]) const
 {
@@ -28,6 +29,12 @@ bool myTeams::Server::displayHelp(int argc, char *argv[]) const
         return true;
     }
     return false;
+}
+
+void myTeams::Server::initServer(uint16_t port)
+{
+    _network_server.initNetworkServer(port);
+    _parser.loadData();
 }
 
 void myTeams::Server::disconnectClient(int client_socket)
@@ -69,8 +76,9 @@ void myTeams::Server::runServer()
                 if (_parser.isClientDisconnected(_poll_fds.getPollFDs()[i].fd))
                     disconnectClient(_poll_fds.getPollFDs()[i].fd);
                 else
-                    _parser.handleCommand(_poll_fds.getPollFDs()[i].fd);
+                    _parser.handleCommand(*_online_clients[_poll_fds.getPollFDs()[i].fd]);
             }
         }
     }
+    _parser.saveData();
 }

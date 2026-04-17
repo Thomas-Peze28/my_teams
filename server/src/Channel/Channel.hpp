@@ -2,36 +2,42 @@
 ** EPITECH PROJECT, 2026
 ** my_teams
 ** File description:
-** Channel
+** Team
 */
 
 #pragma once
 
     #include "IContainer.hpp"
+    #include "Thread.hpp"
 
-    #include <vector>
     #include <string>
     #include <map>
     #include <memory>
-    #include "Thread.hpp"
+    #include <uuid/uuid.h>
+    #include <vector>
 
 namespace myTeams
 {
     class Channel : public IContainer
     {
         public:
-            Channel() = default;
+            Channel(std::string channel_name, std::string channel_description);
             ~Channel() override = default;
 
-            const Thread *getThread(const std::string &thread_uuid) const;
-            void create(__attribute_maybe_unused__ std::string team_name, __attribute_maybe_unused__ std::string team_description) override;
-            void list() const override;
-            void info() const override;
-        
+            void create(__attribute_maybe_unused__ std::string content, __attribute_maybe_unused__ std::string metadata) override {};
+            void list() const override {};
+            void info() const override {};
+            
+            // Getters
+            std::string getUuid() const { return _channel_uuid; };
+            std::string getName() const { return _channel_name; };
+            std::string getDescription() const { return _channel_description; };
+            Thread *getThread(const std::string thread_uuid) const;
+
         private:
-            std::string channel_uuid = "";
-            std::string channel_name = "";
-            std::string channel_description = "";
+            std::string _channel_uuid = "";
+            std::string _channel_name = "";
+            std::string _channel_description = "";
 
             std::map<std::string, std::unique_ptr<Thread>> _threads = {};
     };
