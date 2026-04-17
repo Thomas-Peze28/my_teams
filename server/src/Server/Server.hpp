@@ -53,9 +53,13 @@ namespace myTeams
             ~Server() = default;
 
             void runServer();
-            void initServer(uint16_t port) { _network_server.initNetworkServer(port); }
+            void initServer(uint16_t port);
             void disconnectClient(int client_socket);
             bool displayHelp(int argc, char *argv[]) const;
             void save();
+            void loadUsers();
+            void loadTeams();
+            void loadChannels(Team &team, const std::string &channels_path);
+            void loadThreads(Channel &channel, const std::string &threads_path);
     };
 }

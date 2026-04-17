@@ -31,6 +31,10 @@ namespace myTeams
             std::string getChannelName() const { return channel_name; }
             std::string getChannelDescription() const { return channel_description; }
             std::map<std::string, std::unique_ptr<Thread>> &getThreads() { return _threads; }
+            
+            void setChannelUuid(const std::string& uuid) { channel_uuid = uuid; }
+            void setChannelName(const std::string& name) { channel_name = name; }
+            void setChannelDescription(const std::string& desc) { channel_description = desc; }
         
         private:
             std::string channel_uuid = "";

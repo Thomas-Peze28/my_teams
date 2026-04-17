@@ -27,6 +27,11 @@ namespace myTeams
             std::string getThreadTitle() const { return thread_title; }
             std::string getThreadMessage() const { return thread_message; }
             std::map<std::string, std::string> getReplies() const { return _replies; }
+            
+            void setThreadUuid(const std::string& uuid) { thread_uuid = uuid; }
+            void setThreadTitle(const std::string& title) { thread_title = title; }
+            void setThreadMessage(const std::string& message) { thread_message = message; }
+            void addReply(const std::string& reply_uuid, const std::string& reply_msg) { _replies[reply_uuid] = reply_msg; }
 
         private:
             std::string thread_uuid = "";

@@ -76,6 +76,184 @@ void myTeams::Server::runServer()
     save();
 }
 
+void myTeams::Server::initServer(uint16_t port)
+{
+    _network_server.initNetworkServer(port);
+
+    if (!std::filesystem::exists("Hub")) {
+        return;
+    }
+    if (std::filesystem::exists("Hub/Teams")) {
+        loadTeams();
+    }
+    if (std::filesystem::exists("Hub/Users")) {
+        loadUsers();
+    }
+}
+
+void myTeams::Server::loadTeams()
+{
+    for (const auto& team_entry : std::filesystem::directory_iterator("Hub/Teams")) {
+        if (!team_entry.is_directory())
+            continue;
+
+        std::string team_uuid = team_entry.path().filename().string();
+        std::string team_data_path = team_entry.path().string() + "/data.txt";
+
+        if (!std::filesystem::exists(team_data_path))
+            continue;
+
+        auto team = std::make_unique<Team>();
+        team->setTeamUuid(team_uuid);
+        std::fstream team_file(team_data_path, std::ios::in);
+
+        if (team_file.is_open()) {
+            std::string line;
+            int line_count = 0;
+            while (std::getline(team_file, line)) {
+                if (line_count == 0) {
+                    team->setTeamName(line);
+                } else if (line_count == 1) {
+                    team->setTeamDescription(line);
+                } else if (line_count == 2) {
+                    std::string uuids_line = line;
+                    size_t pos = 0;
+                    while ((pos = uuids_line.find(' ')) != std::string::npos) {
+                        std::string uuid = uuids_line.substr(0, pos);
+                        if (!uuid.empty()) {
+                            team->addAvailableUuid(uuid);
+                        }
+                        uuids_line.erase(0, pos + 1);
+                    }
+                    if (!uuids_line.empty()) {
+                        team->addAvailableUuid(uuids_line);
+                    }
+                }
+                line_count++;
+            }
+            team_file.close();
+        }
+
+        std::string channels_path = team_entry.path().string() + "/Channels";
+        loadChannels(*team, channels_path);
+        _hub.getTeams()[team_uuid] = std::move(team);
+    }
+}
+
+void myTeams::Server::loadChannels(Team &team, const std::string &channels_path)
+{
+    if (!std::filesystem::exists(channels_path)) {
+        return;
+    }
+
+    for (const auto& channel_entry : std::filesystem::directory_iterator(channels_path)) {
+        if (!channel_entry.is_directory())
+            continue;
+
+        std::string channel_uuid = channel_entry.path().filename().string();
+        std::string channel_data_path = channel_entry.path().string() + "/data.txt";
+
+        if (!std::filesystem::exists(channel_data_path))
+            continue;
+
+        auto channel = std::make_unique<Channel>();
+        channel->setChannelUuid(channel_uuid);
+
+        std::fstream channel_file(channel_data_path, std::ios::in);
+        if (channel_file.is_open()) {
+            std::string line;
+            int line_count = 0;
+            while (std::getline(channel_file, line)) {
+                if (line_count == 0) {
+                    channel->setChannelName(line);
+                } else if (line_count == 1) {
+                    channel->setChannelDescription(line);
+                }
+                line_count++;
+            }
+            channel_file.close();
+        }
+
+        std::string threads_path = channel_entry.path().string() + "/Threads";
+        loadThreads(*channel, threads_path);
+        team.getChannels()[channel_uuid] = std::move(channel);
+    }
+}
+
+void myTeams::Server::loadThreads(Channel &channel, const std::string &threads_path)
+{
+    if (!std::filesystem::exists(threads_path)) {
+        return;
+    }
+
+    for (const auto& thread_entry : std::filesystem::directory_iterator(threads_path)) {
+        if (!thread_entry.is_directory())
+            continue;
+
+        std::string thread_uuid = thread_entry.path().filename().string();
+        std::string thread_data_path = thread_entry.path().string() + "/data.txt";
+        std::string replies_path = thread_entry.path().string() + "/replies.txt";
+
+        if (!std::filesystem::exists(thread_data_path))
+            continue;
+
+        auto thread = std::make_unique<Thread>();
+        thread->setThreadUuid(thread_uuid);
+
+        std::fstream thread_file(thread_data_path, std::ios::in);
+        if (thread_file.is_open()) {
+            std::string line;
+            int line_count = 0;
+            while (std::getline(thread_file, line)) {
+                if (line_count == 0) {
+                    thread->setThreadTitle(line);
+                } else if (line_count == 1) {
+                    thread->setThreadMessage(line);
+                }
+                line_count++;
+            }
+            thread_file.close();
+        }
+
+        if (std::filesystem::exists(replies_path)) {
+            std::fstream replies_file(replies_path, std::ios::in);
+            if (replies_file.is_open()) {
+                std::string line;
+                int reply_count = 0;
+                while (std::getline(replies_file, line)) {
+                    std::string reply_uuid = "reply_" + std::to_string(reply_count++);
+                    thread->addReply(reply_uuid, line);
+                }
+                replies_file.close();
+            }
+        }
+
+        channel.getThreads()[thread_uuid] = std::move(thread);
+    }
+}
+
+void myTeams::Server::loadUsers()
+{
+    for (const auto& user_entry : std::filesystem::directory_iterator("Hub/Users")) {
+        if (!user_entry.is_regular_file())
+            continue;
+
+        std::string filename = user_entry.path().filename().string();
+        if (filename.length() > 4 && filename.substr(filename.length() - 4) == ".txt") {
+            std::string user_uuid = filename.substr(0, filename.length() - 4);
+
+            std::fstream file(user_entry.path().string(), std::ios::in);
+            if (file.is_open()) {
+                std::string user_pseudo;
+                if (std::getline(file, user_pseudo)) {
+                    _all_clients[user_pseudo] = user_uuid;
+                }
+                file.close();
+            }
+        }
+    }
+}
+
 void myTeams::Server::save()
 {
     std::fstream file_team;
@@ -88,7 +266,7 @@ void myTeams::Server::save()
         std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid());
         file_team.open("Hub/Teams/" + team.second->getTeamUuid() + "/data.txt", std::ios::out | std::ios::app);
         if (file_team.is_open()) {
-            file_team << "Name: " + team.second->getTeamName() + "\nDescription: " + team.second->getTeamDescription() + "\nClients allowed: ";
+            file_team << team.second->getTeamName() + "\n" + team.second->getTeamDescription() + "\n";
             for (const auto &uuid : team.second->getAvailableUuids()) {
                 file_team << uuid << " ";
             }
@@ -101,7 +279,7 @@ void myTeams::Server::save()
             std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid());
             file_channel.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/data.txt", std::ios::out | std::ios::app);
             if (file_channel.is_open()) {
-                file_channel << "Name: " + channel.second->getChannelName() + "\nDescription: " + channel.second->getChannelDescription() + "\n";
+                file_channel << channel.second->getChannelName() + "\n" + channel.second->getChannelDescription() + "\n";
                 file_channel.close();
             } else {
                 std::cout << "Erreur lors de la sauvegarde des channels." << std::endl;
@@ -110,7 +288,7 @@ void myTeams::Server::save()
                 std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid());
                 file_thread.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/data.txt", std::ios::out | std::ios::app);
                 if (file_thread.is_open()) {
-                    file_thread << "Title: " + thread.second->getThreadTitle() + "\nMessage: " + thread.second->getThreadMessage() + "\n";
+                    file_thread << thread.second->getThreadTitle() + "\n" + thread.second->getThreadMessage() + "\n";
                     file_thread.close();
                 } else {
                     std::cout << "Erreur lors de la sauvegarde des threads." << std::endl;
@@ -118,7 +296,7 @@ void myTeams::Server::save()
                 file_replies.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/replies.txt", std::ios::out | std::ios::app);
                 if (file_replies.is_open()) {
                     for (const auto &reply : thread.second->getReplies()) {
-                        file_replies << "Reply: " + reply.second + "\n";
+                        file_replies << reply.second + "\n";
                     }
                     file_replies.close();
                 } else {

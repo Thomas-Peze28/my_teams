@@ -32,6 +32,11 @@ namespace myTeams
             std::string getTeamDescription() const { return team_description; }
             std::map<std::string, std::unique_ptr<Channel>> &getChannels() { return _channels; }
             std::vector<std::string> &getAvailableUuids() { return _available_uuids; }
+            
+            void setTeamUuid(const std::string& uuid) { team_uuid = uuid; }
+            void setTeamName(const std::string& name) { team_name = name; }
+            void setTeamDescription(const std::string& desc) { team_description = desc; }
+            void addAvailableUuid(const std::string& uuid) { _available_uuids.push_back(uuid); }
         
         private:
             std::string team_uuid = "";

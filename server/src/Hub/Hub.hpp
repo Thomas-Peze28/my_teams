@@ -27,6 +27,7 @@ namespace myTeams
         
             const Team *getTeam(const std::string &team_uuid) const;
             const std::map<std::string, std::unique_ptr<Team>> &getTeams() const { return _teams; }
+            std::map<std::string, std::unique_ptr<Team>> &getTeams() { return _teams; }
 
         private:
             std::map<std::string, std::unique_ptr<Team>> _teams = {};
