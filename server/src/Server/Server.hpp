@@ -7,8 +7,10 @@
 
 #pragma once
 
+    #include <filesystem>
     #include <iostream>
     #include <csignal>
+    #include <fstream>
     #include <cerrno>
     #include <map>
 
@@ -54,5 +56,6 @@ namespace myTeams
             void initServer(uint16_t port) { _network_server.initNetworkServer(port); }
             void disconnectClient(int client_socket);
             bool displayHelp(int argc, char *argv[]) const;
+            void save();
     };
 }

@@ -27,6 +27,10 @@ namespace myTeams
             void create(__attribute_maybe_unused__ std::string team_name, __attribute_maybe_unused__ std::string team_description) override;
             void list() const override;
             void info() const override;
+            std::string getChannelUuid() const { return channel_uuid; }
+            std::string getChannelName() const { return channel_name; }
+            std::string getChannelDescription() const { return channel_description; }
+            std::map<std::string, std::unique_ptr<Thread>> &getThreads() { return _threads; }
         
         private:
             std::string channel_uuid = "";

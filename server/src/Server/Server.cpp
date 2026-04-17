@@ -73,4 +73,68 @@ void myTeams::Server::runServer()
             }
         }
     }
+    save();
+}
+
+void myTeams::Server::save()
+{
+    std::fstream file_team;
+    std::fstream file_channel;
+    std::fstream file_thread;
+    std::fstream file_replies;
+    std::fstream file_users;
+
+    for (const auto &team : _hub.getTeams()) {
+        std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid());
+        file_team.open("Hub/Teams/" + team.second->getTeamUuid() + "/data.txt", std::ios::out | std::ios::app);
+        if (file_team.is_open()) {
+            file_team << "Name: " + team.second->getTeamName() + "\nDescription: " + team.second->getTeamDescription() + "\nClients allowed: ";
+            for (const auto &uuid : team.second->getAvailableUuids()) {
+                file_team << uuid << " ";
+            }
+            file_team << "\n";
+            file_team.close();
+        } else {
+            std::cout << "Erreur lors de la sauvegarde des teams." << std::endl;
+        }
+        for (const auto &channel : team.second->getChannels()) {
+            std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid());
+            file_channel.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/data.txt", std::ios::out | std::ios::app);
+            if (file_channel.is_open()) {
+                file_channel << "Name: " + channel.second->getChannelName() + "\nDescription: " + channel.second->getChannelDescription() + "\n";
+                file_channel.close();
+            } else {
+                std::cout << "Erreur lors de la sauvegarde des channels." << std::endl;
+            }
+            for (const auto &thread : channel.second->getThreads()) {
+                std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid());
+                file_thread.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/data.txt", std::ios::out | std::ios::app);
+                if (file_thread.is_open()) {
+                    file_thread << "Title: " + thread.second->getThreadTitle() + "\nMessage: " + thread.second->getThreadMessage() + "\n";
+                    file_thread.close();
+                } else {
+                    std::cout << "Erreur lors de la sauvegarde des threads." << std::endl;
+                }
+                file_replies.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/replies.txt", std::ios::out | std::ios::app);
+                if (file_replies.is_open()) {
+                    for (const auto &reply : thread.second->getReplies()) {
+                        file_replies << "Reply: " + reply.second + "\n";
+                    }
+                    file_replies.close();
+                } else {
+                    std::cout << "Erreur lors de la sauvegarde des reponses." << std::endl;
+                }
+            }
+        }
+    }
+    for (const auto &client : _all_clients) {
+        file_users.open("Hub/Users/" + client.second + ".txt", std::ios::out | std::ios::app);
+        if (file_users.is_open()) {
+            file_users << client.first;
+            file_users.close();
+        } else {
+            std::cout << "Erreur lors de la sauvegarde des users." << std::endl;
+            break;
+        }
+    }
 }
