@@ -57,11 +57,11 @@ void myTeams::Command::help(Client &client, __attribute_maybe_unused__ CommandDa
 void myTeams::Command::login(Client &client, CommandData data) const
 {
     if (client.getAuth()) {
-        dprintf(client.getSocket(), "400 BAD REQUEST : ou are already logged in as %s\n", client.getPseudo().c_str());
+        dprintf(client.getSocket(), "501 ALREADY_EXIST\n");
         return;
     }
     if (_getClientFromPseudo(data.args[0]) != nullptr) {
-        dprintf(client.getSocket(), "400 BAD REQUEST : pseudo %s is already taken\n", data.args[0].c_str());
+        dprintf(client.getSocket(), "501 ALREADY_EXIST\n");
         return;
     }
     if (!_getUuidFromPseudo(data.args[0]).empty()) {
@@ -81,7 +81,7 @@ void myTeams::Command::login(Client &client, CommandData data) const
 
 void myTeams::Command::logout(Client &client, __attribute_maybe_unused__ CommandData data) const
 {
-    dprintf(client.getSocket(), "101 LOGOUT '%s' '%s'\n", client.getPseudo().c_str(), client.getUuid().c_str());
+    dprintf(client.getSocket(), "100 LOGOUT '%s' '%s'\n", client.getPseudo().c_str(), client.getUuid().c_str());
     server_event_user_logged_out(client.getUuid().c_str());
     client.setAuth(false);
     client.setPseudo("");
@@ -93,7 +93,7 @@ void myTeams::Command::users(Client &client, __attribute_maybe_unused__ CommandD
     for (unsigned int i = 0; i < _all_clients.size(); i++) {
         bool is_online = false;
         is_online = _getClientFromPseudo(std::next(_all_clients.begin(), i)->second) != nullptr;
-        dprintf(client.getSocket(), "103 USERS '%s' '%s' '%d'\n", std::next(_all_clients.begin(), i)->first.c_str(), std::next(_all_clients.begin(), i)->second.c_str(), is_online ? 1 : 0);
+        dprintf(client.getSocket(), "100 USERS '%s' '%s' '%d'\n", std::next(_all_clients.begin(), i)->first.c_str(), std::next(_all_clients.begin(), i)->second.c_str(), is_online ? 1 : 0);
     }
 }
 
@@ -102,11 +102,11 @@ void myTeams::Command::user(Client &client, CommandData data) const
     std::string uuid = data.args[0];
     std::string pseudo = _all_clients.find(uuid)->second;
     if (pseudo.empty()) {
-        dprintf(client.getSocket(), "404 NOT FOUND : no user with uuid %s\n", uuid.c_str());
+        dprintf(client.getSocket(), "500 UNKNOWN_USER '%s'\n", uuid.c_str());
         return;
     }
     bool is_online = _getClientFromPseudo(pseudo) != nullptr;
-    dprintf(client.getSocket(), "103 USERS '%s' '%s' '%d'\n", uuid.c_str(), pseudo.c_str(), is_online ? 1 : 0);
+    dprintf(client.getSocket(), "100 USER '%s' '%s' '%d'\n", uuid.c_str(), pseudo.c_str(), is_online ? 1 : 0);
 }
 
 void myTeams::Command::use(Client &client, CommandData data) const
@@ -116,16 +116,16 @@ void myTeams::Command::use(Client &client, CommandData data) const
     std::string thread_uuid = !data.args[2].empty() ? data.args[2] : "";
 
     if (_hub.getTeam(team_uuid) == nullptr) {
-        dprintf(client.getSocket(), "404 NOT FOUND : no team with uuid %s\n", team_uuid.c_str());
+        dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
         return;
     } else if (_hub.getTeam(team_uuid)->isMember(client.getUuid()) == false) {
-        dprintf(client.getSocket(), "403 FORBIDDEN : you are not a member of the team with uuid %s\n", team_uuid.c_str());
+        dprintf(client.getSocket(), "502 UNAUTHORIZED\n");
         return;
     } else if (!channel_uuid.empty() && _hub.getTeam(team_uuid)->getChannel(channel_uuid) == nullptr) {
-        dprintf(client.getSocket(), "404 NOT FOUND : no channel with uuid %s\n", channel_uuid.c_str());
+        dprintf(client.getSocket(), "500 UNKNOWN_CHANNEL '%s'\n", channel_uuid.c_str());
         return;
     } else if (!thread_uuid.empty() && _hub.getTeam(team_uuid)->getChannel(channel_uuid)->getThread(thread_uuid) == nullptr) {
-        dprintf(client.getSocket(), "404 NOT FOUND : no thread with uuid %s\n", thread_uuid.c_str());
+        dprintf(client.getSocket(), "500 UNKNOWN_THREAD '%s'\n", thread_uuid.c_str());
         return;
     }
     client.setCurrentTeam(team_uuid);
@@ -139,14 +139,14 @@ void myTeams::Command::subscribe(Client &client, CommandData data) const
     std::string team_uuid = data.args[0];
 
     if (_hub.getTeam(team_uuid) == nullptr) {
-        dprintf(client.getSocket(), "404 NOT FOUND : no team with uuid %s\n", team_uuid.c_str());
+        dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
         return;
     } else if (_hub.getTeam(team_uuid)->isMember(client.getUuid()) == true) {
-        dprintf(client.getSocket(), "400 BAD REQUEST : you are already a member of the team with uuid %s\n", team_uuid.c_str());
+        dprintf(client.getSocket(), "501 ALREADY_EXIST\n", team_uuid.c_str());
         return;
     }
     _hub.getTeam(team_uuid)->addMember(client.getUuid());
-    dprintf(client.getSocket(), "300 SUB_OK '%s' '%s'\n", client.getUuid().c_str(), team_uuid.c_str());
+    dprintf(client.getSocket(), "100 SUB_OK '%s' '%s'\n", client.getUuid().c_str(), team_uuid.c_str());
     server_event_user_subscribed(team_uuid.c_str(), client.getUuid().c_str());
 }
 
