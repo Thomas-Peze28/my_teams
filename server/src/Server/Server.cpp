@@ -240,12 +240,12 @@ void myTeams::Server::loadUsers()
 
         std::string filename = user_entry.path().filename().string();
         if (filename.length() > 4 && filename.substr(filename.length() - 4) == ".txt") {
-            std::string user_uuid = filename.substr(0, filename.length() - 4);
+            std::string user_pseudo = filename.substr(0, filename.length() - 4);
 
             std::fstream file(user_entry.path().string(), std::ios::in);
             if (file.is_open()) {
-                std::string user_pseudo;
-                if (std::getline(file, user_pseudo)) {
+                std::string user_uuid;
+                if (std::getline(file, user_uuid)) {
                     _all_clients[user_pseudo] = user_uuid;
                 }
                 file.close();
@@ -264,7 +264,7 @@ void myTeams::Server::save()
 
     for (const auto &team : _hub.getTeams()) {
         std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid());
-        file_team.open("Hub/Teams/" + team.second->getTeamUuid() + "/data.txt", std::ios::out | std::ios::app);
+        file_team.open("Hub/Teams/" + team.second->getTeamUuid() + "/data.txt", std::ios::out | std::ios::trunc);
         if (file_team.is_open()) {
             file_team << team.second->getTeamName() + "\n" + team.second->getTeamDescription() + "\n";
             for (const auto &uuid : team.second->getAvailableUuids()) {
@@ -277,7 +277,7 @@ void myTeams::Server::save()
         }
         for (const auto &channel : team.second->getChannels()) {
             std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid());
-            file_channel.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/data.txt", std::ios::out | std::ios::app);
+            file_channel.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/data.txt", std::ios::out | std::ios::trunc);
             if (file_channel.is_open()) {
                 file_channel << channel.second->getChannelName() + "\n" + channel.second->getChannelDescription() + "\n";
                 file_channel.close();
@@ -286,14 +286,14 @@ void myTeams::Server::save()
             }
             for (const auto &thread : channel.second->getThreads()) {
                 std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid());
-                file_thread.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/data.txt", std::ios::out | std::ios::app);
+                file_thread.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/data.txt", std::ios::out | std::ios::trunc);
                 if (file_thread.is_open()) {
                     file_thread << thread.second->getThreadTitle() + "\n" + thread.second->getThreadMessage() + "\n";
                     file_thread.close();
                 } else {
                     std::cout << "Erreur lors de la sauvegarde des threads." << std::endl;
                 }
-                file_replies.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/replies.txt", std::ios::out | std::ios::app);
+                file_replies.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/replies.txt", std::ios::out | std::ios::trunc);
                 if (file_replies.is_open()) {
                     for (const auto &reply : thread.second->getReplies()) {
                         file_replies << reply.second + "\n";
@@ -306,7 +306,7 @@ void myTeams::Server::save()
         }
     }
     for (const auto &client : _all_clients) {
-        file_users.open("Hub/Users/" + client.first + ".txt", std::ios::out | std::ios::app);
+        file_users.open("Hub/Users/" + client.first + ".txt", std::ios::out | std::ios::trunc);
         if (file_users.is_open()) {
             file_users << client.second;
             file_users.close();
