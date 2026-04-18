@@ -142,7 +142,7 @@ void myTeams::Command::subscribe(Client &client, CommandData data) const
         dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
         return;
     } else if (_hub.getTeam(team_uuid)->isMember(client.getUuid()) == true) {
-        dprintf(client.getSocket(), "501 ALREADY_EXIST\n", team_uuid.c_str());
+        dprintf(client.getSocket(), "501 ALREADY_EXIST\n");
         return;
     }
     _hub.getTeam(team_uuid)->addMember(client.getUuid());
@@ -155,14 +155,14 @@ void myTeams::Command::unsubscribe(Client &client, CommandData data) const
     std::string team_uuid = data.args[0];
 
     if (_hub.getTeam(team_uuid) == nullptr) {
-        dprintf(client.getSocket(), "404 NOT FOUND : no team with uuid %s\n", team_uuid.c_str());
+        dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
         return;
     } else if (_hub.getTeam(team_uuid)->isMember(client.getUuid()) == false) {
-        dprintf(client.getSocket(), "400 BAD REQUEST : you are not a member of the team with uuid %s\n", team_uuid.c_str());
+        dprintf(client.getSocket(), "502 UNAUTHORIZED\n");
         return;
     }
     _hub.getTeam(team_uuid)->removeMember(client.getUuid());
-    dprintf(client.getSocket(), "301 UNSUB_OK '%s' '%s'\n", client.getUuid().c_str(), team_uuid.c_str());
+    dprintf(client.getSocket(), "100 UNSUB_OK '%s' '%s'\n", client.getUuid().c_str(), team_uuid.c_str());
     server_event_user_unsubscribed(team_uuid.c_str(), client.getUuid().c_str());
 }
 
@@ -172,7 +172,7 @@ void myTeams::Command::subscribed(Client &client, CommandData data) const
         dprintf(client.getSocket(), "000 LIST_START\n");
         for (const auto& team : _hub.getTeams()) {
             if (team.second && team.second->isMember(client.getUuid())) {
-                dprintf(client.getSocket(), "302 SUB_TEAMS '%s' '%s' '%s'\n", team.second->getUuid().c_str(), team.second->getName().c_str(), team.second->getDescription().c_str());
+                dprintf(client.getSocket(), "100 SUB_TEAMS '%s' '%s' '%s'\n", team.second->getUuid().c_str(), team.second->getName().c_str(), team.second->getDescription().c_str());
             }
         }
         dprintf(client.getSocket(), "999 LIST_END\n");
@@ -180,7 +180,7 @@ void myTeams::Command::subscribed(Client &client, CommandData data) const
         std::string team_uuid = data.args[0];
         auto *team = _hub.getTeam(team_uuid);
         if (team == nullptr) {
-            dprintf(client.getSocket(), "911 UNKNOWN_TEAM_UUID '%s'\n", team_uuid.c_str());
+            dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
             return;
         }
         for (const auto& member_uuid : team->getMembers()) {
@@ -188,7 +188,7 @@ void myTeams::Command::subscribed(Client &client, CommandData data) const
             const std::string user_name = user != _all_clients.end() ? user->second : "";
             const int status = _getClientFromPseudo(user_name) != nullptr ? 1 : 0;
 
-            dprintf(client.getSocket(), "303 SUB_USERS '%s' '%s' '%d'\n", member_uuid.c_str(), user_name.c_str(), status);
+            dprintf(client.getSocket(), "100 SUB_USERS '%s' '%s' '%d'\n", member_uuid.c_str(), user_name.c_str(), status);
         }
     }
 }

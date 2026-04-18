@@ -72,15 +72,15 @@ void myTeams::Parser::executeCommand(Client& client, const CommandData& cmd) con
 
     const auto it = handlers.find(cmd.name);
     if (it == handlers.end()) {
-        dprintf(client.getSocket(), "919 UNKNOWN COMMAND: %s\n", cmd.name.c_str());
+        dprintf(client.getSocket(), "500 UNKNOWN_COMMAND '%s'\n", cmd.name.c_str());
         return;
     }
     if (it->second.requires_auth && !client.getAuth()) {
-        dprintf(client.getSocket(), "401 UNAUTHORIZED : you must be logged in to use this command\n");
+        dprintf(client.getSocket(), "502 UNAUTHORIZED\n");
         return;
     }
     if (cmd.nb_args < it->second.min_args || cmd.nb_args > it->second.max_args) {
-        dprintf(client.getSocket(), "400 BAD REQUEST : wrong number of arguments for command %s\n", cmd.name.c_str());
+        dprintf(client.getSocket(), "502 BAD_REQUEST '%s'\n", cmd.name.c_str());
         return;
     }
     (_command.*(it->second.handler))(client, cmd);
