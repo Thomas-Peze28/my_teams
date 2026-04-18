@@ -274,6 +274,12 @@ void myTeams::Client::handleErrors(int code, const std::string &msg, const std::
         else if (msg.find("UNAUTHORIZED") != std::string::npos) {
             client_error_unauthorized();
         }
+        else if (msg.find("BAD REQUEST") != std::string::npos) {
+            std::cout << "[ERROR] Bad request: " << arg1 << std::endl;
+        }
+        else if (msg.find("UNKNOWN_COMMAND") != std::string::npos) {
+            std::cout << "[ERROR] Unknown command: " << arg1 << std::endl;
+        }
         else {
             std::cout << "[ERROR] Unhandled 5xx error: " << msg << std::endl;
         }
