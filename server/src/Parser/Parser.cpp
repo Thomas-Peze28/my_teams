@@ -64,7 +64,7 @@ void myTeams::Parser::executeCommand(Client& client, const CommandData& cmd) con
         {"/logout", {&Command::logout, true, 0, 0}},
         {"/users", {&Command::users, true, 0, 0}},
         {"/user", {&Command::user, true, 1, 1}},
-        {"/use", {&Command::use, true, 1, 1}},
+        {"/use", {&Command::use, true, 1, 3}},
         {"/subscribe", {&Command::subscribe, true, 1, 1}},
         {"/unsubscribe", {&Command::unsubscribe, true, 1, 1}},
         {"/subscribed", {&Command::subscribed, true, 0, 1}}

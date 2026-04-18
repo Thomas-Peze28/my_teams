@@ -111,9 +111,9 @@ void myTeams::Command::user(Client &client, CommandData data) const
 
 void myTeams::Command::use(Client &client, CommandData data) const
 {
-    std::string team_uuid = !data.args[0].empty() ? data.args[0] : "";
-    std::string channel_uuid = !data.args[1].empty() ? data.args[1] : "";
-    std::string thread_uuid = !data.args[2].empty() ? data.args[2] : "";
+    std::string team_uuid = data.args.size() > 0 ? data.args[0] : "";
+    std::string channel_uuid = data.args.size() > 1 ? data.args[1] : "";
+    std::string thread_uuid = data.args.size() > 2 ? data.args[2] : "";
 
     if (_hub.getTeam(team_uuid) == nullptr) {
         dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
@@ -124,9 +124,12 @@ void myTeams::Command::use(Client &client, CommandData data) const
     } else if (!channel_uuid.empty() && _hub.getTeam(team_uuid)->getChannel(channel_uuid) == nullptr) {
         dprintf(client.getSocket(), "500 UNKNOWN_CHANNEL '%s'\n", channel_uuid.c_str());
         return;
-    } else if (!thread_uuid.empty() && _hub.getTeam(team_uuid)->getChannel(channel_uuid)->getThread(thread_uuid) == nullptr) {
-        dprintf(client.getSocket(), "500 UNKNOWN_THREAD '%s'\n", thread_uuid.c_str());
-        return;
+    } else if (!thread_uuid.empty()) {
+        auto *channel = _hub.getTeam(team_uuid)->getChannel(channel_uuid);
+        if (channel == nullptr || channel->getThread(thread_uuid) == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_THREAD '%s'\n", thread_uuid.c_str());
+            return;
+        }
     }
     client.setCurrentTeam(team_uuid);
     client.setCurrentChannel(channel_uuid);
