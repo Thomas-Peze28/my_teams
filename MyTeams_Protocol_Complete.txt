@@ -1,0 +1,191 @@
+EPITECH MyTeams Protocol
+
+The following are the FTP commands from client to server:
+*Please note that all arguments of the existing commands should be quoted with double quotes.*
+
+            /help : show help
+
+            /login ["user_name"] : set the user_name used by client
+            /logout : disconnect the client from the server
+
+            /users : get the list of all users that exist on the domain
+            /user ["user_uuid"] : get details about the requested user
+
+            /send ["user_uuid"] ["message_body"] : send a message to specific user
+            /messages ["user_uuid"] : list all messages exchanged with the specified user
+
+            /subscribe ["team_uuid"] : subscribe to the events of a team and its sub directories (enable reception of all events from a team)
+            /subscribed ?["team_uuid"] : list all subscribed teams or list all users subscribed to a team
+            /unsubscribe ["team_uuid"] : unsubscribe from a team
+
+            /use ?["team_uuid"] ?["channel_uuid"] ?["thread_uuid"] : Sets the command context to a team/channel/thread
+
+            /create : based on the context, create the sub resource :
+               - When the context is not defined (/use): /create ["team_name"] ["team_description"] : create a new team
+               - When team_uuid is defined (/use "team_uuid"): /create ["channel_name"] ["channel_description"] : create a new channel
+               - When team_uuid and channel_uuid are defined (/use "team_uuid" "channel_uuid"): /create ["thread_title"] ["thread_message"] : create a new thread
+               - When team_uuid, channel_uuid and thread_uuid are defined (/use "team_uuid" "channel_uuid" "thread_uuid"): /create ["comment_body"] : create a new reply
+
+            /list : based on the context, list all the sub resources :
+               - When the context is not defined (/use): /list : list all existing teams
+               - When team_uuid is defined (/use "team_uuid"): /list : list all existing channels
+               - When team_uuid and channel_uuid are defined (/use "team_uuid" "channel_uuid"): /list : list all existing threads
+               - When team_uuid, channel_uuid and thread_uuid are defined (/use "team_uuid" "channel_uuid" "thread_uuid"): /list : list all existing replies
+
+            /info : based on the context, display details of the current resource :
+               - When the context is not defined (/use): /info : display currently logged-in user details
+               - When team_uuid is defined (/use "team_uuid"): /info : display currently selected team details
+               - When team_uuid and channel_uuid are defined (/use "team_uuid" "channel_uuid"): /info : display currently selected channel details
+               - When team_uuid, channel_uuid and thread_uuid are defined (/use "team_uuid" "channel_uuid" "thread_uuid"): /info : display currently selected thread details
+
+
+Command-Reply Sequences:
+
+The server reply is defined to contain the 3-digit code, followed by Space <SP>, followed by a Keyword identifying the action, and terminated by the Telnet end-of-line code <CRLF>.
+
+Format: <- CODE <SP> KEYWORD <SP> ["ARGS"...] <CRLF>
+
+Connection Establishment & Help
+            Connection Establishment ->
+               <- 001 Welcome to MyTeams!
+            /help ->
+               <- 002 *help menu*
+
+
+User Management
+            /login ["user_name"] ->
+               <- 100 LOGIN "user_uuid" "user_name"
+               <- 501 ALREADY_EXIST (error: user already logged in / duplicate name)
+
+            /logout ->
+               <- 100 LOGOUT "user_uuid" "user_name"
+               <- 502 UNAUTHORIZED (error: not logged in)
+
+            /users ->
+               <- 000 LIST_START
+               <- 100 USER_DATA "uuid" "user_name" "status"
+               <- 999 LIST_END
+
+            /user ["user_uuid"] ->
+               <- 100 USER_DATA "uuid" "user_name" "status"
+               <- 500 UNKNOWN_USER "user_uuid"
+
+Message Management
+            /send ["user_uuid"] ["message_body"] ->
+               <- 100 SEND_OK
+               <- 500 UNKNOWN_USER "user_uuid"
+               <- 502 UNAUTHORIZED (error: message sending failed)
+
+            /messages ["user_uuid"] ->
+               <- 000 LIST_START
+               <- 100 MSG_DATA "sender_uuid" "timestamp" "body"
+               <- 999 LIST_END
+               <- 500 UNKNOWN_USER "user_uuid"
+
+
+Subscription Management
+            /subscribe ["team_uuid"] ->
+               <- 100 SUB_OK "user_uuid" "team_uuid"
+               <- 500 UNKNOWN_TEAM "team_uuid"
+
+            /unsubscribe ["team_uuid"] ->
+               <- 100 UNSUB_OK "user_uuid" "team_uuid"
+               <- 500 UNKNOWN_TEAM "team_uuid"
+
+            /subscribed ->
+               <- 000 LIST_START
+               <- 100 SUB_TEAMS "uuid" "team_name" "description"
+               <- 999 LIST_END
+
+            /subscribed ["team_uuid"] ->
+               <- 000 LIST_START
+               <- 100 SUB_USERS "uuid" "user_name" "status"
+               <- 999 LIST_END
+               <- 500 UNKNOWN_TEAM "team_uuid"
+
+
+Context Management
+            /use ?["team_uuid"] ?["channel_uuid"] ?["thread_uuid"] ->
+               <- 800 CONTEXT_SET
+
+
+Team Management (No Context)
+            /create ["team_name"] ["team_description"] ->
+               <- 200 TEAM_CREATED "uuid" "team_name" "description"
+               <- 501 ALREADY_EXIST
+
+            /list ->
+               <- 000 LIST_START
+               <- 400 LIST_TEAM "uuid" "team_name" "description"
+               <- 999 LIST_END
+
+            /info ->
+               <- 300 USER_INFO "user_uuid" "user_name" "status"
+
+
+Channel Management (Team Context)
+            /create ["channel_name"] ["channel_description"] ->
+               <- 200 CHANNEL_CREATED "uuid" "channel_name" "description"
+               <- 500 UNKNOWN_TEAM "team_uuid"
+               <- 501 ALREADY_EXIST
+
+            /list ->
+               <- 000 LIST_START
+               <- 400 LIST_CHANNEL "uuid" "channel_name" "description"
+               <- 999 LIST_END
+               <- 500 UNKNOWN_TEAM "team_uuid"
+
+            /info ->
+               <- 300 TEAM_INFO "team_uuid" "team_name" "description"
+               <- 500 UNKNOWN_TEAM "team_uuid"
+
+
+Thread Management (Channel Context)
+            /create ["thread_title"] ["thread_body"] ->
+               <- 200 THREAD_CREATED "thread_uuid" "user_uuid" "timestamp" "title" "body"
+               <- 500 UNKNOWN_CHANNEL "channel_uuid"
+
+            /list ->
+               <- 000 LIST_START
+               <- 400 LIST_THREAD "uuid" "user_uuid" "timestamp" "title" "body"
+               <- 999 LIST_END
+               <- 500 UNKNOWN_CHANNEL "channel_uuid"
+
+            /info ->
+               <- 300 CHANNEL_INFO "channel_uuid" "channel_name" "description"
+               <- 500 UNKNOWN_CHANNEL "channel_uuid"
+
+
+Reply Management (Thread Context)
+            /create ["reply_body"] ->
+               <- 200 REPLY_CREATED "thread_uuid" "user_uuid" "timestamp" "body"
+               <- 500 UNKNOWN_THREAD "thread_uuid"
+
+            /list ->
+               <- 000 LIST_START
+               <- 400 LIST_REPLY "uuid" "user_uuid" "timestamp" "body"
+               <- 999 LIST_END
+               <- 500 UNKNOWN_THREAD "thread_uuid"
+
+            /info ->
+               <- 300 REPLY_INFO "thread_uuid" "user_uuid" "timestamp" "body"
+               <- 500 UNKNOWN_THREAD "thread_uuid"
+
+
+Event Notifications
+            <- 600 EVT_LOGGED_IN "user_uuid" "user_name"
+            <- 600 EVT_LOGGED_OUT "user_uuid" "user_name"
+            <- 600 EVT_MSG_RECEIVED "sender_uuid" "message_body"
+            <- 600 EVT_TEAM_CREATED "team_uuid" "team_name" "description"
+            <- 600 EVT_CHAN_CREATED "channel_uuid" "channel_name" "description"
+            <- 600 EVT_THREAD_CREATED "thread_uuid" "user_uuid" "timestamp" "title" "body"
+            <- 600 EVT_REPLY_CREATED "team_uuid" "thread_uuid" "user_uuid" "body"
+
+
+Error Code Reference
+            500: UNKNOWN_USER "user_uuid"      (user or recipient not found)
+            500: UNKNOWN_TEAM "team_uuid"      (team not found)
+            500: UNKNOWN_CHANNEL "channel_uuid" (channel not found)
+            500: UNKNOWN_THREAD "thread_uuid"   (thread not found)
+            501: ALREADY_EXIST                 (already logged in / resource already exists)
+            502: UNAUTHORIZED                  (not logged in / permission required)

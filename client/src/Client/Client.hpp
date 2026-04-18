@@ -39,11 +39,16 @@ namespace myTeams
             bool connectToServer();
             bool handleServerInput();
             bool handleUserInput();
+        
             void processServerMessage(const std::string &message);
             std::vector<std::string> extractArgs(const std::string &message);
-
-            std::map<std::string, std::function<void(const std::vector<std::string>&)>> _routes;
-            void initRoutes();
+        
+            void handleUserActions(int code, const std::string &msg, const std::vector<std::string> &args);
+            void handleCreations(int code, const std::string &msg, const std::vector<std::string> &args);
+            void handleInfos(int code, const std::string &msg, const std::vector<std::string> &args);
+            void handleListings(int code, const std::string &msg, const std::vector<std::string> &args);
+            void handleErrors(int code, const std::string &msg, const std::vector<std::string> &args);
+            void handleEvents(int code, const std::string &msg, const std::vector<std::string> &args);
 
         public:
             Client();
