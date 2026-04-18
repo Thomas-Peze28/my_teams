@@ -58,12 +58,12 @@ void myTeams::Client::initClient(const std::string &ip, uint16_t port)
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverSocket == -1) {
         std::cout << "Failed to create socket" << std::endl;
-        exit(EXIT_FAILURE);
+        exit(84);
     }
 
     if (!connectToServer()) {
         std::cout << "Failed to connect to server" << std::endl;
-        exit(EXIT_FAILURE);
+        exit(84);
     }
     std::cout << "Connected to server at " << _ip << ":" << _port << std::endl;
 }
