@@ -154,7 +154,6 @@ void myTeams::Client::handleUserActions(int code, const std::string &msg, const 
         }
         else if (msg.find("LOGOUT") != std::string::npos && args.size() >= 2) {
             client_event_logged_out(args[0].c_str(), args[1].c_str());
-            _isRunning = false;
         }
         else if (msg.find("USERS") != std::string::npos && args.size() >= 3) {
             client_print_users(args[0].c_str(), args[1].c_str(), std::stoi(args[2]));
