@@ -16,7 +16,7 @@ namespace myTeams
         public:
             virtual ~IContainer() = default;
 
-            virtual void create(__attribute_maybe_unused__ std::string content, __attribute_maybe_unused__ std::string metadata) = 0;
+            virtual void create(std::string content, __attribute_maybe_unused__ std::string metadata) = 0;
             virtual void list() const = 0;
             virtual void info() const = 0;
     };

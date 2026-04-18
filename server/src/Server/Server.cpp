@@ -7,11 +7,11 @@
 
 #include "Server.hpp"
 
-bool myTeams::Server::_is_running = false;
-
-myTeams::Server::Server() : _network_server(_poll_fds, _nb_clients), _command(_hub, _online_clients, _all_clients), _parser(_command, _online_clients)
+myTeams::Server::Server() : _network_server(_poll_fds, _nb_clients), _command(_online_clients, _all_clients, _hub), _parser(_command)
 {
 }
+
+bool myTeams::Server::_is_running = false;
 
 bool myTeams::Server::displayHelp(int argc, char *argv[]) const
 {
@@ -69,7 +69,7 @@ void myTeams::Server::runServer()
                 if (_parser.isClientDisconnected(_poll_fds.getPollFDs()[i].fd))
                     disconnectClient(_poll_fds.getPollFDs()[i].fd);
                 else
-                    _parser.handleCommand(_poll_fds.getPollFDs()[i].fd);
+                    _parser.handleCommand(*_online_clients[_poll_fds.getPollFDs()[i].fd]);
             }
         }
     }
@@ -306,9 +306,9 @@ void myTeams::Server::save()
         }
     }
     for (const auto &client : _all_clients) {
-        file_users.open("Hub/Users/" + client.second + ".txt", std::ios::out | std::ios::app);
+        file_users.open("Hub/Users/" + client.first + ".txt", std::ios::out | std::ios::app);
         if (file_users.is_open()) {
-            file_users << client.first;
+            file_users << client.second;
             file_users.close();
         } else {
             std::cout << "Erreur lors de la sauvegarde des users." << std::endl;

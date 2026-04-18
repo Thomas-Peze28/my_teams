@@ -14,11 +14,12 @@
     #include <sstream>
     #include <map>
     #include <memory>
+    #include <unordered_map>
+    #include <cerrno>
+
     #include "Client.hpp"
-    #include "Hub.hpp"
     #include "CommandData.hpp"
     #include "Command.hpp"
-    #include <cerrno>
 
     #define BUFFER_SIZE 1024
 
@@ -27,16 +28,18 @@ namespace myTeams
     class Parser
     {
         public:
-            Parser(Command& command, std::map<int, std::unique_ptr<Client>>& online_clients);
+            Parser(Command &command);
             ~Parser() = default;
 
             bool isClientDisconnected(int client_socket) const;
-            void handleCommand(int client_socket) const;
+            void handleCommand(Client& client) const;
+
+            void loadData() {};
+            void saveData() {};
 
         private:
-
             Command &_command;
-            std::map<int, std::unique_ptr<Client>>& _online_clients;
-            void executeCommand(CommandData& cmd, int client_socket) const;
+
+            void executeCommand(Client& client, const CommandData& cmd) const;
     };
 }

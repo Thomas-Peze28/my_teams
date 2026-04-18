@@ -15,6 +15,14 @@ const myTeams::Team *myTeams::Hub::getTeam(const std::string &team_uuid) const
     return nullptr;
 }
 
+myTeams::Team *myTeams::Hub::getTeam(const std::string &team_uuid)
+{
+    auto it = _teams.find(team_uuid);
+    if (it != _teams.end())
+        return it->second.get();
+    return nullptr;
+}
+
 void myTeams::Hub::create(__attribute_maybe_unused__ std::string team_name, __attribute_maybe_unused__ std::string team_description)
 {
 }

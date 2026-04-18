@@ -14,10 +14,14 @@ int main(int argc, char *argv[])
     if (client.displayHelp(argc, argv))
         return EXIT_SUCCESS;
 
-    std::string ip = argv[1];
-    uint16_t port = std::stoi(argv[2]);
+    try {
+        std::string ip = argv[1];
+        uint16_t port = std::stoi(argv[2]);
 
-    client.initClient(ip, port);
-    client.run();
-    return EXIT_SUCCESS;
+        client.initClient(ip, port);
+        client.run();
+    } catch (...) {
+        return 84;
+    }
+    return 0;
 }

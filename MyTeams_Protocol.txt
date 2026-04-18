@@ -43,7 +43,7 @@ Command-Reply Sequences:
 
 The server reply is defined to contain the 3-digit code, followed by Space <SP>, followed by a Keyword identifying the action, and terminated by the Telnet end-of-line code <CRLF>.
 
-Format: <- CODE <SP> KEYWORD <SP> ["ARGS"...] <CRLF>
+Format: <- CODE <SP> KEYWORD <SP> ['ARGS'...] <CRLF>
 
 Connection Establishment & Help
             Connection Establishment ->

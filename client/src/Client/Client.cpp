@@ -58,12 +58,12 @@ void myTeams::Client::initClient(const std::string &ip, uint16_t port)
     _serverSocket = socket(AF_INET, SOCK_STREAM, 0);
     if (_serverSocket == -1) {
         std::cout << "Failed to create socket" << std::endl;
-        exit(EXIT_FAILURE);
+        exit(84);
     }
 
     if (!connectToServer()) {
         std::cout << "Failed to connect to server" << std::endl;
-        exit(EXIT_FAILURE);
+        exit(84);
     }
     std::cout << "Connected to server at " << _ip << ":" << _port << std::endl;
 }
@@ -154,7 +154,6 @@ void myTeams::Client::handleUserActions(int code, const std::string &msg, const 
         }
         else if (msg.find("LOGOUT") != std::string::npos && args.size() >= 2) {
             client_event_logged_out(args[0].c_str(), args[1].c_str());
-            _isRunning = false;
         }
         else if (msg.find("USERS") != std::string::npos && args.size() >= 3) {
             client_print_users(args[0].c_str(), args[1].c_str(), std::stoi(args[2]));
@@ -274,6 +273,12 @@ void myTeams::Client::handleErrors(int code, const std::string &msg, const std::
         }
         else if (msg.find("UNAUTHORIZED") != std::string::npos) {
             client_error_unauthorized();
+        }
+        else if (msg.find("BAD REQUEST") != std::string::npos) {
+            std::cout << "[ERROR] Bad request: " << arg1 << std::endl;
+        }
+        else if (msg.find("UNKNOWN_COMMAND") != std::string::npos) {
+            std::cout << "[ERROR] Unknown command: " << arg1 << std::endl;
         }
         else {
             std::cout << "[ERROR] Unhandled 5xx error: " << msg << std::endl;

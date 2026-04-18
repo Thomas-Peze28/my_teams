@@ -20,23 +20,24 @@ SRC     =   src/main.cpp \
 			src/PollFD/PollFD.cpp \
 			src/NetworkServer/NetworkServer.cpp \
 			src/Parser/Parser.cpp \
-			src/Hub/Hub.cpp \
-			src/Team/Team.cpp \
 			src/Command/Command.cpp \
+			src/Team/Team.cpp \
 			src/Channel/Channel.cpp \
 			src/Thread/Thread.cpp \
+			src/Hub/Hub.cpp \
 
 HEADERS =	-I src/Server \
 			-I src/Client \
 			-I src/PollFD \
 			-I src/NetworkServer \
 			-I src/Parser \
+			-I src/Command \
+			-I src/Include \
+			-I src/Command \
 			-I src/Team \
 			-I src/Channel \
 			-I src/Thread \
 			-I src/Hub \
-			-I src/Command \
-			-I src/Include \
 			-I ../libs/myteams \
 
 CXX     =   g++

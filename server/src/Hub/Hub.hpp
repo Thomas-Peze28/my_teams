@@ -13,6 +13,10 @@
     #include <map>
     #include <memory>
 
+    extern "C" {
+        #include "logging_server.h"
+    }
+
 namespace myTeams
 {
     class Hub : public IContainer
@@ -26,6 +30,7 @@ namespace myTeams
             void info() const override;
         
             const Team *getTeam(const std::string &team_uuid) const;
+            Team *getTeam(const std::string &team_uuid);
             const std::map<std::string, std::unique_ptr<Team>> &getTeams() const { return _teams; }
             std::map<std::string, std::unique_ptr<Team>> &getTeams() { return _teams; }
 
