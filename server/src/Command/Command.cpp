@@ -341,7 +341,8 @@ void myTeams::Command::list(Client &client, __attribute_maybe_unused__ CommandDa
 void myTeams::Command::info(Client &client, __attribute_maybe_unused__ CommandData data) const
 {
     if (client.getCurrentTeam().empty() && client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
-        dprintf(client.getSocket(), "300 USER_INFO '%s' '%s' connected.\n", client.getUuid().c_str(), client.getPseudo().c_str());
+        bool is_online = _getClientFromPseudo(client.getPseudo()) != nullptr;
+        dprintf(client.getSocket(), "300 USER_INFO '%s' '%s' '%d'.\n", client.getUuid().c_str(), client.getPseudo().c_str(), is_online ? 1 : 0);
     } else if (!client.getCurrentTeam().empty() && client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
         auto *team = _hub.getTeam(client.getCurrentTeam());
         if (team == nullptr) {
