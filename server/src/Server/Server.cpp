@@ -206,9 +206,9 @@ void myTeams::Server::loadThreads(Channel &channel, const std::string &threads_p
             int line_count = 0;
             while (std::getline(thread_file, line)) {
                 if (line_count == 0) {
-                    thread->setThreadTitle(line);
+                    thread->setThreadName(line);
                 } else if (line_count == 1) {
-                    thread->setThreadMessage(line);
+                    thread->setThreadDescription(line);
                 }
                 line_count++;
             }
@@ -288,7 +288,7 @@ void myTeams::Server::save()
                 std::filesystem::create_directories("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid());
                 file_thread.open("Hub/Teams/" + team.second->getTeamUuid() + "/Channels/" + channel.second->getChannelUuid() + "/Threads/" + thread.second->getThreadUuid() + "/data.txt", std::ios::out | std::ios::trunc);
                 if (file_thread.is_open()) {
-                    file_thread << thread.second->getThreadTitle() + "\n" + thread.second->getThreadMessage() + "\n";
+                    file_thread << thread.second->getThreadName() + "\n" + thread.second->getThreadDescription() + "\n";
                     file_thread.close();
                 } else {
                     std::cout << "Erreur lors de la sauvegarde des threads." << std::endl;

@@ -39,6 +39,10 @@ namespace myTeams
             void unsubscribe(Client &client, CommandData data) const;
             void subscribed(Client &client, CommandData data) const;
             void create(Client &client, CommandData data) const;
+            void list(Client &client, __attribute_maybe_unused__ CommandData data) const;
+            // void info(Client &client, __attribute_maybe_unused__ CommandData data) const;
+            // void send(Client &client, CommandData data) const;
+            // void messages(Client &client, CommandData data) const;
 
         private:
             std::map<int, std::unique_ptr<Client>>& _online_clients;

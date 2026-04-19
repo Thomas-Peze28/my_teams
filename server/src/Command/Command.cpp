@@ -243,7 +243,7 @@ void myTeams::Command::create(Client &client, CommandData data) const
         thread->setThreadUuid(thread_uuid);
         thread->setThreadName(thread_name);
         thread->setThreadDescription(thread_description);
-        // channel->getThreads()[thread_uuid] = std::move(thread);
+        // channel->getThreads().push_back(std::make_pair(thread_uuid, std::move(thread)));
         dprintf(client.getSocket(), "200 THREAD_CREATED '%s' '%s' '%s' '%s' '%s'\n", thread_uuid.c_str(), client.getUuid().c_str(), std::to_string(std::time(nullptr)).c_str(), thread_name.c_str(), thread_description.c_str());
     } else if (!client.getCurrentTeam().empty() && !client.getCurrentChannel().empty() && !client.getCurrentThread().empty() && data.nb_args == 1) {
         std::string team_uuid = client.getCurrentTeam();
@@ -271,4 +271,69 @@ void myTeams::Command::create(Client &client, CommandData data) const
         dprintf(client.getSocket(), "500 MISSING_ARGUMENTS\n");
     }
     return;
+}
+
+void myTeams::Command::list(Client &client, __attribute_maybe_unused__ CommandData data) const
+{
+    if (client.getCurrentTeam().empty() && client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
+        dprintf(client.getSocket(), "000 LIST_START\n");
+        for (const auto& team : _hub.getTeams()) {
+            dprintf(client.getSocket(), "400 LIST_TEAM '%s' '%s' '%s'\n", team.second->getUuid().c_str(), team.second->getName().c_str(), team.second->getDescription().c_str());
+        }
+        dprintf(client.getSocket(), "999 LIST_END\n");
+    } else if (!client.getCurrentTeam().empty() && client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
+        std::string team_uuid = client.getCurrentTeam();
+        auto *team = _hub.getTeam(team_uuid);
+        if (team == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
+            return;
+        }
+        dprintf(client.getSocket(), "000 LIST_START\n");
+        for (const auto& channel : team->getChannels()) {
+            dprintf(client.getSocket(), "400 LIST_CHANNEL '%s' '%s' '%s'\n", channel.second->getChannelUuid().c_str(), channel.second->getChannelName().c_str(), channel.second->getChannelDescription().c_str());
+        }
+        dprintf(client.getSocket(), "999 LIST_END\n");
+    } else if (!client.getCurrentTeam().empty() && !client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
+        std::string team_uuid = client.getCurrentTeam();
+        std::string channel_uuid = client.getCurrentChannel();
+        auto *team = _hub.getTeam(team_uuid);
+        if (team == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
+            return;
+        }
+        auto *channel = team->getChannel(channel_uuid);
+        if (channel == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_CHANNEL '%s'\n", channel_uuid.c_str());
+            return;
+        }
+        dprintf(client.getSocket(), "000 LIST_START\n");
+        for (const auto& thread : channel->getThreads()) {
+            dprintf(client.getSocket(), "400 LIST_THREAD '%s' '%s' '%s' '%s' '%s'\n", thread.second->getThreadUuid().c_str(), client.getUuid().c_str(), std::to_string(std::time(nullptr)).c_str(), thread.second->getThreadName().c_str(), thread.second->getThreadDescription().c_str());
+        }
+        dprintf(client.getSocket(), "999 LIST_END\n");
+    } else {
+        std::string team_uuid = client.getCurrentTeam();
+        std::string channel_uuid = client.getCurrentChannel();
+        std::string thread_uuid = client.getCurrentThread();
+        auto *team = _hub.getTeam(team_uuid);
+        if (team == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
+            return;
+        }
+        auto *channel = team->getChannel(channel_uuid);
+        if (channel == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_CHANNEL '%s'\n", channel_uuid.c_str());
+            return;
+        }
+        auto *thread = channel->getThread(thread_uuid);
+        if (thread == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_THREAD '%s'\n", thread_uuid.c_str());
+            return;
+        }
+        dprintf(client.getSocket(), "000 LIST_START\n");
+        for (const auto& reply : thread->getReplies()) {
+            dprintf(client.getSocket(), "400 LIST_REPLY '%s' '%s' '%s' '%s'\n", reply.first.c_str(), client.getUuid().c_str(), std::to_string(std::time(nullptr)).c_str(), reply.second.c_str());
+        }
+        dprintf(client.getSocket(), "999 LIST_END\n");
+    }
 }
