@@ -49,6 +49,7 @@ namespace myTeams
             void handleListings(int code, const std::string &msg, const std::vector<std::string> &args);
             void handleErrors(int code, const std::string &msg, const std::vector<std::string> &args);
             void handleEvents(int code, const std::string &msg, const std::vector<std::string> &args);
+            void handleContexts(int code, const std::string &msg, const std::vector<std::string> &args);
 
         public:
             Client();

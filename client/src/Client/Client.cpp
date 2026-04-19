@@ -138,6 +138,9 @@ void myTeams::Client::processServerMessage(const std::string &message)
         case 6:
             handleEvents(code, message, args);
             break;
+        case 8:
+            handleContexts(code, message, args);
+            break;
         case 9:
             break;
         default:
@@ -312,6 +315,20 @@ void myTeams::Client::handleEvents(int code, const std::string &msg, const std::
         }
         else {
             std::cout << "[ERROR] Unhandled 6xx event: " << msg << std::endl;
+        }
+    }
+}
+
+void myTeams::Client::handleContexts(int code, const std::string &msg, const std::vector<std::string> &args)
+{
+    (void)args;
+
+    if (code == 800) {
+        if (msg.find("CONTEXT_SET") != std::string::npos) {
+            std::cout << "[INFO] Context updated." << std::endl;
+        }
+        else {
+            std::cout << "[ERROR] Unhandled 8xx context: " << msg << std::endl;
         }
     }
 }
