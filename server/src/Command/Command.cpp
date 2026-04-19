@@ -195,3 +195,80 @@ void myTeams::Command::subscribed(Client &client, CommandData data) const
         }
     }
 }
+
+void myTeams::Command::create(Client &client, CommandData data) const
+{
+    if (client.getCurrentTeam().empty() && client.getCurrentChannel().empty() && client.getCurrentThread().empty() && data.nb_args == 2) {
+        std::string team_name = data.args[0];
+        std::string team_description = data.args[1];
+        std::string team_uuid = generateUuid();
+        auto team = std::make_unique<Team>(team_name, team_description);
+        team->setTeamUuid(team_uuid);
+        team->addMember(client.getUuid());
+        _hub.getTeams()[team_uuid] = std::move(team);
+        dprintf(client.getSocket(), "200 TEAM_CREATED '%s' '%s' '%s'\n", team_uuid.c_str(), team_name.c_str(), team_description.c_str());
+        server_event_team_created(team_uuid.c_str(), team_name.c_str(), client.getUuid().c_str());
+        server_event_user_subscribed(team_uuid.c_str(), client.getUuid().c_str());
+    } else if (!client.getCurrentTeam().empty() && client.getCurrentChannel().empty() && client.getCurrentThread().empty() && data.nb_args == 2) {
+        std::string team_uuid = client.getCurrentTeam();
+        std::string channel_name = data.args[0];
+        std::string channel_description = data.args[1];
+        auto *team = _hub.getTeam(team_uuid);
+        if (team == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
+            return;
+        }
+        std::string channel_uuid = generateUuid();
+        auto channel = std::make_unique<Channel>(channel_name, channel_description);
+        channel->setChannelUuid(channel_uuid);
+        team->getChannels()[channel_uuid] = std::move(channel);
+        dprintf(client.getSocket(), "200 CHANNEL_CREATED '%s' '%s' '%s'\n", channel_uuid.c_str(), channel_name.c_str(), channel_description.c_str());
+    } else if (!client.getCurrentTeam().empty() && !client.getCurrentChannel().empty() && client.getCurrentThread().empty() && data.nb_args == 2) {
+        std::string team_uuid = client.getCurrentTeam();
+        std::string channel_uuid = client.getCurrentChannel();
+        std::string thread_name = data.args[0];
+        std::string thread_description = data.args[1];
+        auto *team = _hub.getTeam(team_uuid);
+        if (team == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
+            return;
+        }
+        auto *channel = team->getChannel(channel_uuid);
+        if (channel == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_CHANNEL '%s'\n", channel_uuid.c_str());
+            return;
+        }
+        std::string thread_uuid = generateUuid();
+        auto thread = std::make_unique<Thread>();
+        thread->setThreadUuid(thread_uuid);
+        thread->setThreadName(thread_name);
+        thread->setThreadDescription(thread_description);
+        // channel->getThreads()[thread_uuid] = std::move(thread);
+        dprintf(client.getSocket(), "200 THREAD_CREATED '%s' '%s' '%s' '%s' '%s'\n", thread_uuid.c_str(), client.getUuid().c_str(), std::to_string(std::time(nullptr)).c_str(), thread_name.c_str(), thread_description.c_str());
+    } else if (!client.getCurrentTeam().empty() && !client.getCurrentChannel().empty() && !client.getCurrentThread().empty() && data.nb_args == 1) {
+        std::string team_uuid = client.getCurrentTeam();
+        std::string channel_uuid = client.getCurrentChannel();
+        std::string thread_uuid = client.getCurrentThread();
+        std::string reply = data.args[0];
+        auto *team = _hub.getTeam(team_uuid);
+        if (team == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", team_uuid.c_str());
+            return;
+        }
+        auto *channel = team->getChannel(channel_uuid);
+        if (channel == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_CHANNEL '%s'\n", channel_uuid.c_str());
+            return;
+        }
+        auto *thread = channel->getThread(thread_uuid);
+        if (thread == nullptr) {
+            dprintf(client.getSocket(), "500 UNKNOWN_THREAD '%s'\n", thread_uuid.c_str());
+            return;
+        }
+        thread->getReplies()[generateUuid()] = reply;
+        dprintf(client.getSocket(), "200 REPLY_CREATED '%s' '%s' '%s' '%s' '%s'\n", thread_uuid.c_str(), client.getUuid().c_str(), std::to_string(std::time(nullptr)).c_str(), thread->getThreadName().c_str(), thread->getThreadDescription().c_str());
+    } else {
+        dprintf(client.getSocket(), "500 MISSING_ARGUMENTS\n");
+    }
+    return;
+}

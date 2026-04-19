@@ -28,13 +28,13 @@ namespace myTeams
             void list() const override;
             void info() const override;
             std::string getThreadUuid() const { return _thread_uuid; }
-            std::string getThreadTitle() const { return _thread_name; }
-            std::string getThreadMessage() const { return _thread_description; }
+            std::string getThreadName() const { return _thread_name; }
+            std::string getThreadDescription() const { return _thread_description; }
             std::map<std::string, std::string> getReplies() const { return _replies; }
             
             void setThreadUuid(const std::string& uuid) { _thread_uuid = uuid; }
-            void setThreadTitle(const std::string& title) { _thread_name = title; }
-            void setThreadMessage(const std::string& message) { _thread_description = message; }
+            void setThreadName(const std::string& name) { _thread_name = name; }
+            void setThreadDescription(const std::string& description) { _thread_description = description; }
             void addReply(const std::string& reply_uuid, const std::string& reply_msg) { _replies[reply_uuid] = reply_msg; }
 
         private:

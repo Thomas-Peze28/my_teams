@@ -15,6 +15,7 @@
     #include <memory>
     #include <uuid/uuid.h>
     #include <functional>
+    #include <ctime>
 
     extern "C" {
     #include "logging_server.h"
@@ -37,6 +38,7 @@ namespace myTeams
             void subscribe(Client &client, CommandData data) const;
             void unsubscribe(Client &client, CommandData data) const;
             void subscribed(Client &client, CommandData data) const;
+            void create(Client &client, CommandData data) const;
 
         private:
             std::map<int, std::unique_ptr<Client>>& _online_clients;
