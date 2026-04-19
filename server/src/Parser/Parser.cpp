@@ -72,7 +72,7 @@ void myTeams::Parser::executeCommand(Client& client, const CommandData& cmd) con
         {"/use", {&Command::use, true, 1, 3}},
         {"/create", {&Command::create, true, 1, 2}},
         {"/list", {&Command::list, true, 0, 0}},
-        // {"/info", {&Command::info, true, 0, 0}}
+        {"/info", {&Command::info, true, 0, 0}}
     };
 
     const auto it = handlers.find(cmd.name);
