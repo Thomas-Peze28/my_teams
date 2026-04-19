@@ -341,14 +341,14 @@ void myTeams::Command::list(Client &client, __attribute_maybe_unused__ CommandDa
 void myTeams::Command::info(Client &client, __attribute_maybe_unused__ CommandData data) const
 {
     if (client.getCurrentTeam().empty() && client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
-        dprintf(client.getSocket(), "300 USER_INFO '%s' '%s' connected.\n", client.getUuid(), client.getPseudo());
+        dprintf(client.getSocket(), "300 USER_INFO '%s' '%s' connected.\n", client.getUuid().c_str(), client.getPseudo().c_str());
     } else if (!client.getCurrentTeam().empty() && client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
         auto *team = _hub.getTeam(client.getCurrentTeam());
         if (team == nullptr) {
             dprintf(client.getSocket(), "500 UNKNOWN_TEAM '%s'\n", client.getCurrentTeam().c_str());
             return;
         }
-        dprintf(client.getSocket(), "300 TEAM_INFO '%s' '%s' '%s'.\n", client.getCurrentTeam(), team->getName(), team->getDescription());
+        dprintf(client.getSocket(), "300 TEAM_INFO '%s' '%s' '%s'.\n", client.getCurrentTeam().c_str(), team->getName().c_str(), team->getDescription().c_str());
     } else if (!client.getCurrentTeam().empty() && !client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
         auto *team = _hub.getTeam(client.getCurrentTeam());
         if (team == nullptr) {
@@ -360,7 +360,7 @@ void myTeams::Command::info(Client &client, __attribute_maybe_unused__ CommandDa
             dprintf(client.getSocket(), "500 UNKNOWN_CHANNEL '%s'\n", client.getCurrentChannel().c_str());
             return;
         }
-        dprintf(client.getSocket(), "300 CHANNEL_INFO '%s' '%s' '%s'.\n", client.getCurrentChannel(), channel->getChannelName(), channel->getChannelDescription());
+        dprintf(client.getSocket(), "300 CHANNEL_INFO '%s' '%s' '%s'.\n", client.getCurrentChannel().c_str(), channel->getChannelName().c_str(), channel->getChannelDescription().c_str());
     } else if (!client.getCurrentTeam().empty() && !client.getCurrentChannel().empty() && client.getCurrentThread().empty()) {
         auto *team = _hub.getTeam(client.getCurrentTeam());
         if (team == nullptr) {
@@ -377,7 +377,7 @@ void myTeams::Command::info(Client &client, __attribute_maybe_unused__ CommandDa
             dprintf(client.getSocket(), "500 UNKNOWN_THREAD '%s'\n", client.getCurrentThread().c_str());
             return;
         }
-        dprintf(client.getSocket(), "300 THREAD_INFO '%s' '%s' '%s'.\n", client.getCurrentThread(), thread->getThreadName(), thread->getThreadDescription());
+        dprintf(client.getSocket(), "300 THREAD_INFO '%s' '%s' '%s'.\n", client.getCurrentThread().c_str(), thread->getThreadName().c_str(), thread->getThreadDescription().c_str());
     }
     return;
 }
